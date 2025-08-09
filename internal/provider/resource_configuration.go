@@ -127,17 +127,11 @@ func (r *ConfigurationResource) Schema(ctx context.Context, req resource.SchemaR
 				Optional: true,
 				Computed: true,
 				Default:  stringdefault.StaticString("text"),
-				// PlanModifiers: []planmodifier.String{
-				// 	stringplanmodifier.UseStateForUnknown(),
-				// },
 			},
 			"application": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				Default:  stringdefault.StaticString(""),
-				// PlanModifiers: []planmodifier.String{
-				// 	stringplanmodifier.UseStateForUnknown(),
-				// },
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
@@ -153,27 +147,15 @@ func (r *ConfigurationResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"md5": schema.StringAttribute{
 				Computed: true,
-				// PlanModifiers: []planmodifier.String{
-				// 	stringplanmodifier.UseStateForUnknown(),
-				// },
 			},
 			"encrypt_key": schema.StringAttribute{
 				Computed: true,
-				// PlanModifiers: []planmodifier.String{
-				// 	stringplanmodifier.UseStateForUnknown(),
-				// },
 			},
 			"create_time": schema.Int64Attribute{
 				Computed: true,
-				// PlanModifiers: []planmodifier.Int64{
-				// 	int64planmodifier.UseStateForUnknown(),
-				// },
 			},
 			"modify_time": schema.Int64Attribute{
 				Computed: true,
-				// PlanModifiers: []planmodifier.Int64{
-				// 	int64planmodifier.UseStateForUnknown(),
-				// },
 			},
 			"id": schema.StringAttribute{
 				Computed: true,
