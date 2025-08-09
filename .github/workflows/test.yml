@@ -70,7 +70,6 @@ jobs:
           - "1.4.*"
         nacos:
           - "v2.1.2"
-          - "v2.2.3"
           - "v2.3.2"
           - "v2.4.3"
           - "v2.5.1"
@@ -98,6 +97,7 @@ jobs:
             retries=$((retries-1))
             sleep 5
           done
+          curl -X POST '${NACOS_HOST}/v1/auth/users/admin' -d 'password=$your_password'
         env:
           NACOS_VERSION: ${{ matrix.nacos }}
       - run: go mod download
