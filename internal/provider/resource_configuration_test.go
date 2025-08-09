@@ -39,10 +39,6 @@ EOT
 `, namespaceId, group, dataId, content, description)
 }
 
-func testAccConfigurationSourceID(namespaceId, group, dataId string) string {
-	return fmt.Sprintf("%s:%s:%s", namespaceId, group, dataId)
-}
-
 func TestAccConfigurationResource(t *testing.T) {
 	resourceName := "nacos_configuration.test"
 
@@ -97,11 +93,9 @@ func TestAccConfigurationResource(t *testing.T) {
 
 			// ImportState testing
 			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "namespace_id",
-				ImportStateId:                        testAccConfigurationSourceID(namespaceId, group, dataId),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			// Update and Read testing
 			{

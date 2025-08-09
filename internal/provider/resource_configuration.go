@@ -53,11 +53,14 @@ type ConfigurationResourceModel struct {
 }
 
 func (c *ConfigurationResourceModel) SetFromConfiguration(ctx context.Context, cfg *nacos.Config) diag.Diagnostics {
+	c.ID = types.StringValue(BuildThreePartID(cfg.NamespaceId, cfg.Group, cfg.DataID))
+	c.DataID = types.StringValue(cfg.DataID)
+	c.Group = types.StringValue(cfg.Group)
+	c.NamespaceID = types.StringValue(cfg.NamespaceId)
 	c.Application = types.StringValue(cfg.AppName)
 	c.Content = types.StringValue(cfg.Content)
 	c.Description = types.StringValue(cfg.Desc)
 	c.Type = types.StringValue(cfg.Type)
-	c.ID = types.StringValue(cfg.ID)
 	c.Md5 = types.StringValue(cfg.Md5)
 	c.CreateTime = types.Int64Value(cfg.CreateTime)
 	c.ModifyTime = types.Int64Value(cfg.ModifyTime)
@@ -284,10 +287,18 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 	}
 	tflog.Debug(ctx, fmt.Sprintf("read state %#v", data))
 
+	namespaceId, group, dataId, err := ParseThreePartID(data.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Parse Nacos configuration",
+			err.Error(),
+		)
+		return
+	}
 	config, err := r.client.GetConfig(&nacos.GetCSOpts{
-		DataID:      data.DataID.ValueString(),
-		Group:       data.Group.ValueString(),
-		NamespaceID: data.NamespaceID.ValueString(),
+		NamespaceID: namespaceId,
+		Group:       group,
+		DataID:      dataId,
 	})
 	if err != nil {
 		if IsNotFoundError(err) {
@@ -394,19 +405,7 @@ func (r *ConfigurationResource) Delete(ctx context.Context, req resource.DeleteR
 }
 
 func (r *ConfigurationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	idParts := strings.Split(req.ID, ":")
-
-	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
-		resp.Diagnostics.AddError(
-			"Unexpected Import Identifier",
-			fmt.Sprintf("Expected import identifier with format: namespace_id:group:data_id. Got: %q", req.ID),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("namespace_id"), idParts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("group"), idParts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("data_id"), idParts[2])...)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 // Struct model for identity data handling
@@ -422,4 +421,16 @@ func (r *ConfigurationResource) IdentitySchema(_ context.Context, _ resource.Ide
 			},
 		},
 	}
+}
+
+func BuildThreePartID(namespaceID, group, dataID string) string {
+	return fmt.Sprintf("%s:%s:%s", namespaceID, group, dataID)
+}
+
+func ParseThreePartID(id string) (namespaceID, group, dataID string, err error) {
+	idParts := strings.Split(id, ":")
+	if len(idParts) != 3 || idParts[1] == "" || idParts[2] == "" {
+		return "", "", "", fmt.Errorf("unexpected ID format (%q). Expected <namespace_id>:<group>:<data_id>", id)
+	}
+	return idParts[0], idParts[1], idParts[2], nil
 }
