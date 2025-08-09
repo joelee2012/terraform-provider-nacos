@@ -1,0 +1,12 @@
+services:
+  nacos:
+    image: nacos/nacos-server:${NACOS_VERSION}
+    container_name: nacos-standalone
+    env_file:
+      - nacos.env
+    volumes:
+      - ./standalone-logs/:/home/nacos/logs
+    ports:
+      - "8080:8080"
+      - "8848:8848"
+      - "9848:9848"
