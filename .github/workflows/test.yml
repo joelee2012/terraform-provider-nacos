@@ -90,7 +90,7 @@ jobs:
       - name: Setup Nacos
         run: |
           cat nacos.env >> $GITHUB_ENV
-          docker-compose up -d
+          docker compose up -d
         env:
           NACOS_VERSION: ${{ matrix.nacos }}
       - run: go mod download
