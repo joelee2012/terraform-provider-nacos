@@ -222,11 +222,11 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 	}
 	config, err := r.client.GetConfig(getOpts)
 	if err == nil && config != nil {
-		key := fmt.Sprintf("%s,%s,%s", data.DataID.ValueString(), data.Group.ValueString(), data.NamespaceID.ValueString())
+		key := BuildThreePartID(data.NamespaceID.ValueString(), data.Group.ValueString(), data.DataID.ValueString())
 		resp.Diagnostics.AddError(
 			"Configuration already exists",
-			fmt.Sprintf("A configuration with data_id=%s,group=%s,namespace_id=%s already exists. "+
-				"Run `terraform import nacos_configuration.example %s` to manage it.", getOpts.DataID, getOpts.Group, getOpts.NamespaceID, key),
+			fmt.Sprintf("A configuration with namespace_id=%s,group=%s,data_id=%s already exists. "+
+				"Run `terraform import nacos_configuration.example %s` to manage it.", getOpts.NamespaceID, getOpts.Group, getOpts.DataID, key),
 		)
 		return
 	}
@@ -430,7 +430,7 @@ func BuildThreePartID(namespaceID, group, dataID string) string {
 func ParseThreePartID(id string) (namespaceID, group, dataID string, err error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 3 || idParts[1] == "" || idParts[2] == "" {
-		return "", "", "", fmt.Errorf("unexpected ID format (%q). Expected <namespace_id>:<group>:<data_id>", id)
+		return "", "", "", fmt.Errorf("unexpected ID format (%q). expected <namespace_id>:<group>:<data_id>", id)
 	}
 	return idParts[0], idParts[1], idParts[2], nil
 }
