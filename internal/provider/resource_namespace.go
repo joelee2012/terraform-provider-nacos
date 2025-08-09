@@ -226,7 +226,7 @@ func (r *NamespaceResource) ImportState(ctx context.Context, req resource.Import
 	resource.ImportStatePassthroughWithIdentity(ctx, path.Root("namespace_id"), path.Root("namespace_id"), req, resp)
 }
 
-// Struct model for identity data handling
+// Struct model for identity data handling.
 type NamespaceResourceIdentityModel struct {
 	ID types.String `tfsdk:"namespace_id"`
 }

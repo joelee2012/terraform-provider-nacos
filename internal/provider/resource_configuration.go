@@ -390,7 +390,7 @@ func (r *ConfigurationResource) ImportState(ctx context.Context, req resource.Im
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-// Struct model for identity data handling
+// Struct model for identity data handling.
 type ConfigurationResourceIdentityModel struct {
 	ID types.String `tfsdk:"id"`
 }
