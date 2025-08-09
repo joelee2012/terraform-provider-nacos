@@ -93,7 +93,7 @@ jobs:
           docker compose up -d
           retries=20
           while [ $retries -gt 0 ]; do
-            curl -s "${NACOS_HOST}/v1/console/server/state" > /dev/null && break
+            curl -sf "${NACOS_HOST}/v1/console/server/state" && break
             echo "Waiting for Nacos to be ready..."
             retries=$((retries-1))
             sleep 5
