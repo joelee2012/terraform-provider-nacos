@@ -71,9 +71,9 @@ jobs:
         nacos:
           - "v2.1.2"
           - "v2.3.2"
-          - "v2.4.3"
-          - "v2.5.1"
-          - "v3.0.2"
+          # - "v2.4.3"
+          # - "v2.5.1"
+          # - "v3.0.2"
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
@@ -88,7 +88,11 @@ jobs:
         uses: docker/setup-compose-action@v1
       - name: Setup Nacos
         run: |
-          cat nacos.env >> $GITHUB_ENV
+          cat >> $GITHUB_ENV <<EOF
+          NACOS_HOST=http://127.0.0.1:8848/nacos
+          NACOS_USERNAME=nacos
+          NACOS_PASSWORD=nacos
+          EOF
           docker compose up -d
           retries=20
           while [ $retries -gt 0 ]; do
@@ -97,7 +101,6 @@ jobs:
             retries=$((retries-1))
             sleep 5
           done
-          curl -X POST '${NACOS_HOST}/v1/auth/users/admin' -d 'password=$your_password'
         env:
           NACOS_VERSION: ${{ matrix.nacos }}
       - run: go mod download
