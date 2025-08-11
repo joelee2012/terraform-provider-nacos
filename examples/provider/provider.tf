@@ -1,3 +1,3 @@
-provider "scaffolding" {
+provider "nacos" {
   # example configuration here
 }
