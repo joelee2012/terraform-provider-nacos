@@ -53,14 +53,14 @@ func (r *NamespaceResource) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				MarkdownDescription: "Example identifier",
+				MarkdownDescription: "ID of namespace and this terraform resource.",
 			},
 			"name": schema.StringAttribute{
-				MarkdownDescription: "Example configurable attribute with default value",
+				MarkdownDescription: "Name of namespace.",
 				Required:            true,
 			},
 			"description": schema.StringAttribute{
-				MarkdownDescription: "Example configurable attribute",
+				MarkdownDescription: "Description of namespace.",
 				Optional:            true,
 				// Computed:            true,
 			},
