@@ -112,8 +112,8 @@ github.com/jedib0t/go-pretty v4.3.0+incompatible h1:CGs8AVhEKg/n9YbUenWmNStRW2PH
 github.com/jedib0t/go-pretty v4.3.0+incompatible/go.mod h1:XemHduiw8R651AF9Pt4FwCTKeG3oo7hrHJAoznj9nag=
 github.com/jhump/protoreflect v1.15.1 h1:HUMERORf3I3ZdX05WaQ6MIpd/NJ434hTp5YiKgfCL6c=
 github.com/jhump/protoreflect v1.15.1/go.mod h1:jD/2GMKKE6OqX8qTjhADU1e6DShO+gavG9e0Q693nKo=
-github.com/joelee2012/nacosctl v0.0.4-0.20250726021117-4c0bdf9efa64 h1:LW5bTl5EZANuBx8U6SIVDOiaR+KGXWQ1tnq2m1n1FTk=
-github.com/joelee2012/nacosctl v0.0.4-0.20250726021117-4c0bdf9efa64/go.mod h1:+xMupmu7vSPznwXhdOUqjX4Azgvspw5YB4JEV3Be1FQ=
+github.com/joelee2012/nacosctl v0.0.4 h1:2GDyIDPGAYR+ukZihj22LoGvioZ5NCTalOw2DqiOt4E=
+github.com/joelee2012/nacosctl v0.0.4/go.mod h1:+xMupmu7vSPznwXhdOUqjX4Azgvspw5YB4JEV3Be1FQ=
 github.com/kevinburke/ssh_config v1.2.0 h1:x584FjTGwHzMwvHx18PXxbBVzfnxogHaAReU4gf13a4=
 github.com/kevinburke/ssh_config v1.2.0/go.mod h1:CT57kijsi8u/K/BOFA39wgDQJ9CxiF4nAY/ojJ6r6mM=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
