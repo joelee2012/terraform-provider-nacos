@@ -110,7 +110,7 @@ func (r *ConfigurationResource) Schema(ctx context.Context, req resource.SchemaR
 				Required:            true,
 			},
 			"group": schema.StringAttribute{
-				MarkdownDescription: "Configuration group.",
+				MarkdownDescription: "Configuration group, default is `DEFAULT_GROUP`.",
 				Optional:            true,
 				Computed:            true,
 				Default:             stringdefault.StaticString("DEFAULT_GROUP"),
@@ -119,7 +119,7 @@ func (r *ConfigurationResource) Schema(ctx context.Context, req resource.SchemaR
 				},
 			},
 			"namespace_id": schema.StringAttribute{
-				MarkdownDescription: "Configuration namespace id.",
+				MarkdownDescription: "Configuration namespace id, default is empty string which means public namespace.",
 				Optional:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -127,7 +127,7 @@ func (r *ConfigurationResource) Schema(ctx context.Context, req resource.SchemaR
 				},
 			},
 			"type": schema.StringAttribute{
-				MarkdownDescription: "Configuration type.",
+				MarkdownDescription: "Configuration type, default is `text`.",
 				Optional:            true,
 				Computed:            true,
 				Default:             stringdefault.StaticString("text"),

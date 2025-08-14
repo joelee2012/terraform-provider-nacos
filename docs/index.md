@@ -23,6 +23,6 @@ provider "nacos" {
 
 ### Optional
 
-- `host` (String) URL of nacos server
-- `password` (String) Password for nacos server
-- `username` (String) Username for nacos server
+- `host` (String) URL of nacos server, set the value statically in the configuration, or use the `NACOS_HOST` environment variable.
+- `password` (String) Password for nacos server, set the value statically in the configuration, or use the `NACOS_PASSWORD` environment variable.
+- `username` (String) Username for nacos server, set the value statically in the configuration, or use the `NACOS_USERNAME` environment variable.
