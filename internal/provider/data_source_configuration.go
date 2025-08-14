@@ -34,7 +34,7 @@ type ConfigurationDataSourceModel struct {
 	Type             types.String `tfsdk:"type"`
 	Md5              types.String `tfsdk:"md5"`
 	EncryptedDataKey types.String `tfsdk:"encrypt_key"`
-	AppName          types.String `tfsdk:"app_name"`
+	Application      types.String `tfsdk:"application"`
 	CreateTime       types.Int64  `tfsdk:"create_time"`
 	ModifyTime       types.Int64  `tfsdk:"modify_time"`
 	Desc             types.String `tfsdk:"description"`
@@ -52,31 +52,40 @@ func (d *ConfigurationDataSource) Schema(ctx context.Context, req datasource.Sch
 
 		Attributes: map[string]schema.Attribute{
 			"data_id": schema.StringAttribute{
-				Required: true,
+				MarkdownDescription: "Configuration data id.",
+				Required:            true,
 			},
 			"group": schema.StringAttribute{
-				Required: true,
+				MarkdownDescription: "Configuration group.",
+				Required:            true,
 			},
 			"namespace_id": schema.StringAttribute{
-				Optional: true,
+				MarkdownDescription: "Configuration namespace id.",
+				Optional:            true,
 			},
 			"id": schema.StringAttribute{
-				Computed: true,
+				MarkdownDescription: "The ID of this Terraform resource. In the format of `<namespace_id>:<group>:<data_id>`.",
+				Computed:            true,
 			},
 			"content": schema.StringAttribute{
-				Computed: true,
+				MarkdownDescription: "Configuration content.",
+				Computed:            true,
 			},
 			"type": schema.StringAttribute{
-				Computed: true,
+				MarkdownDescription: "Configuration type.",
+				Computed:            true,
 			},
 			"md5": schema.StringAttribute{
-				Computed: true,
+				MarkdownDescription: "Configuration md5.",
+				Computed:            true,
 			},
 			"encrypt_key": schema.StringAttribute{
-				Computed: true,
+				MarkdownDescription: "Configuration encrypt key.",
+				Computed:            true,
 			},
-			"app_name": schema.StringAttribute{
-				Computed: true,
+			"application": schema.StringAttribute{
+				MarkdownDescription: "Configuration application.",
+				Computed:            true,
 			},
 			"description": schema.StringAttribute{
 				Computed: true,
@@ -86,10 +95,12 @@ func (d *ConfigurationDataSource) Schema(ctx context.Context, req datasource.Sch
 				Computed:    true,
 			},
 			"create_time": schema.Int64Attribute{
-				Computed: true,
+				MarkdownDescription: "Configuration created time.",
+				Computed:            true,
 			},
 			"modify_time": schema.Int64Attribute{
-				Computed: true,
+				MarkdownDescription: "Configuration modify time.",
+				Computed:            true,
 			},
 		},
 	}
@@ -134,7 +145,7 @@ func (d *ConfigurationDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 
 	data = ConfigurationDataSourceModel{
-		ID:               types.StringValue(config.ID),
+		ID:               types.StringValue(BuildThreePartID(config.NamespaceId, config.Group, config.DataID)),
 		DataID:           types.StringValue(config.DataID),
 		Group:            types.StringValue(config.Group),
 		Content:          types.StringValue(config.Content),
@@ -142,7 +153,7 @@ func (d *ConfigurationDataSource) Read(ctx context.Context, req datasource.ReadR
 		Type:             types.StringValue(config.Type),
 		Md5:              types.StringValue(config.Md5),
 		EncryptedDataKey: types.StringValue(config.EncryptedDataKey),
-		AppName:          types.StringValue(config.AppName),
+		Application:      types.StringValue(config.AppName),
 		CreateTime:       types.Int64Value(config.CreateTime),
 		ModifyTime:       types.Int64Value(config.ModifyTime),
 		Desc:             types.StringValue(config.Desc),

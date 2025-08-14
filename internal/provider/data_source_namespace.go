@@ -43,21 +43,27 @@ func (d *NamespaceDataSource) Schema(ctx context.Context, req datasource.SchemaR
 
 		Attributes: map[string]schema.Attribute{
 			"namespace_id": schema.StringAttribute{
+				MarkdownDescription: "ID of namespace and this terraform resource.",
 				Required: true,
 			},
 			"name": schema.StringAttribute{
+				MarkdownDescription: "Name of namespace.",
 				Computed: true,
 			},
 			"description": schema.StringAttribute{
+				MarkdownDescription: "Description of namespace.",
 				Computed: true,
 			},
 			"quota": schema.Int64Attribute{
+				MarkdownDescription: "Quota of namespace.",
 				Computed: true,
 			},
 			"type": schema.Int64Attribute{
+				MarkdownDescription: "type of namespace.",
 				Computed: true,
 			},
 			"config_count": schema.Int64Attribute{
+				MarkdownDescription: "Configuration count of namespace.",
 				Computed: true,
 			},
 		},

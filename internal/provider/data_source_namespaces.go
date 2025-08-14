@@ -52,22 +52,28 @@ func (d *NamespacesDataSource) Schema(ctx context.Context, req datasource.Schema
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"namespace_id": schema.StringAttribute{
-							Computed: true,
+							MarkdownDescription: "ID of namespace and this terraform resource.",
+							Computed:            true,
 						},
 						"name": schema.StringAttribute{
-							Computed: true,
+							MarkdownDescription: "Name of namespace.",
+							Computed:            true,
 						},
 						"description": schema.StringAttribute{
-							Computed: true,
+							MarkdownDescription: "Description of namespace.",
+							Computed:            true,
 						},
 						"quota": schema.Int64Attribute{
-							Computed: true,
+							MarkdownDescription: "Quota of namespace.",
+							Computed:            true,
 						},
 						"type": schema.Int64Attribute{
-							Computed: true,
+							MarkdownDescription: "type of namespace.",
+							Computed:            true,
 						},
 						"config_count": schema.Int64Attribute{
-							Computed: true,
+							MarkdownDescription: "Configuration count of namespace.",
+							Computed:            true,
 						},
 					},
 				},
