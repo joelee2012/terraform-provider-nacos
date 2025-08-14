@@ -1,0 +1,1 @@
+terraform import nacos_configuration.example "namespace_id:group:data_id"
