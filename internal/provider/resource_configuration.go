@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/joelee2012/nacosctl/pkg/nacos"
@@ -34,6 +36,7 @@ type ConfigurationResource struct {
 
 // ConfigurationResourceModel describes the resource data model.
 type ConfigurationResourceModel struct {
+	ID               types.String `tfsdk:"id"`
 	DataID           types.String `tfsdk:"data_id"`
 	Group            types.String `tfsdk:"group"`
 	Content          types.String `tfsdk:"content"`
@@ -42,7 +45,6 @@ type ConfigurationResourceModel struct {
 	Application      types.String `tfsdk:"application"`
 	Description      types.String `tfsdk:"description"`
 	Tags             types.Set    `tfsdk:"tags"`
-	ID               types.String `tfsdk:"id"`
 	CreateTime       types.Int64  `tfsdk:"create_time"`
 	Md5              types.String `tfsdk:"md5"`
 	EncryptedDataKey types.String `tfsdk:"encrypt_key"`
@@ -93,72 +95,88 @@ func (r *ConfigurationResource) Metadata(ctx context.Context, req resource.Metad
 func (r *ConfigurationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Configuration resource",
+		MarkdownDescription: "Nacos configuration resource",
 
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				MarkdownDescription: "The ID of this Terraform resource. In the format of `<namespace_id>:<group>:<data_id>`.",
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"data_id": schema.StringAttribute{
-				Required: true,
+				MarkdownDescription: "Configuration data id.",
+				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"content": schema.StringAttribute{
-				Required: true,
+				MarkdownDescription: "Configuration content.",
+				Required:            true,
 			},
 			"group": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  stringdefault.StaticString("DEFAULT_GROUP"),
+				MarkdownDescription: "Configuration group, default is `DEFAULT_GROUP`.",
+				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString("DEFAULT_GROUP"),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"namespace_id": schema.StringAttribute{
-				Optional: true,
+				MarkdownDescription: "Configuration namespace id, default is empty string which means public namespace.",
+				Optional:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"type": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  stringdefault.StaticString("text"),
+				MarkdownDescription: "Configuration type, default is `text`.",
+				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString("text"),
+				Validators: []validator.String{
+					stringvalidator.OneOf([]string{"text", "json", "xml", "yaml", "html", "properties"}...),
+				},
 			},
 			"application": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  stringdefault.StaticString(""),
+				MarkdownDescription: "Configuration application.",
+				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString(""),
 			},
 			"description": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  stringdefault.StaticString(""),
+				MarkdownDescription: "Configuration description.",
+				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString(""),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"tags": schema.SetAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
+				MarkdownDescription: "Configuration tags.",
+				ElementType:         types.StringType,
+				Optional:            true,
 			},
 			"md5": schema.StringAttribute{
-				Computed: true,
+				MarkdownDescription: "Configuration md5.",
+				Computed:            true,
 			},
 			"encrypt_key": schema.StringAttribute{
-				Computed: true,
+				MarkdownDescription: "Configuration encrypt key.",
+				Computed:            true,
 			},
 			"create_time": schema.Int64Attribute{
-				Computed: true,
+				MarkdownDescription: "Configuration created time.",
+				Computed:            true,
 			},
 			"modify_time": schema.Int64Attribute{
-				Computed: true,
-			},
-			"id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				MarkdownDescription: "Configuration modify time.",
+				Computed:            true,
 			},
 		},
 	}
@@ -240,7 +258,7 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 	config, err = r.client.GetConfig(getOpts)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read Nacos configuration when create resource",
+			"Unable to Read Nacos configuration after creating resource",
 			err.Error(),
 		)
 		return
@@ -343,7 +361,7 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read Nacos configuration when update resource",
+			"Unable to Read Nacos configuration after updating resource",
 			err.Error(),
 		)
 		return

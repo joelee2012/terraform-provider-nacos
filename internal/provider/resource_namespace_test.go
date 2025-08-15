@@ -56,11 +56,11 @@ func TestAccNamespaceResource(t *testing.T) {
 
 			// ImportState testing
 			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "namespace_id",
-				ImportStateId:                        namespaceId,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// ImportStateVerifyIdentifierAttribute: "namespace_id",
+				// ImportStateId:                        namespaceId,
 			},
 			// Update and Read testing
 			{

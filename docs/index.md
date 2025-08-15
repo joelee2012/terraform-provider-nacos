@@ -3,18 +3,41 @@
 page_title: "nacos Provider"
 subcategory: ""
 description: |-
-  
+  Terraform Provider for Nacos
 ---
 
 # nacos Provider
 
-
+Terraform Provider for Nacos
 
 ## Example Usage
 
 ```terraform
 provider "nacos" {
-  # example configuration here
+  host     = "https://<nacos-url>"
+  username = "<nacos username>"
+  password = "<nacos password>"
+}
+
+resource "nacos_namespace" "example" {
+  namespace_id = "some-id"
+  name         = "some-name"
+  description  = "managed by terraform"
+}
+
+resource "nacos_configuration" "example" {
+  namespace_id = resource.nacos_namespace.example.namespace_id
+  data_id      = "configreation-test"
+  group        = "DEFAULT_GROUP"
+  content      = <<EOF
+server:
+  port: 8080
+  address: 0.0.0.0
+EOF
+  type         = "yaml"
+  description  = "test terraform"
+  tags         = ["terraform"]
+  application  = "terraform-nacos"
 }
 ```
 
@@ -23,6 +46,6 @@ provider "nacos" {
 
 ### Optional
 
-- `host` (String) URL of nacos server
-- `password` (String) Password for nacos server
-- `username` (String) Username for nacos server
+- `host` (String) URL of nacos server, set the value statically in the configuration, or use the `NACOS_HOST` environment variable.
+- `password` (String) Password for nacos server, set the value statically in the configuration, or use the `NACOS_PASSWORD` environment variable.
+- `username` (String) Username for nacos server, set the value statically in the configuration, or use the `NACOS_USERNAME` environment variable.

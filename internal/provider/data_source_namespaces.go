@@ -29,6 +29,7 @@ type NamespacesDataSourceModel struct {
 }
 
 type NamespaceModel struct {
+	ID          types.String `tfsdk:"id"`
 	NamespaceId types.String `tfsdk:"namespace_id"`
 	Name        types.String `tfsdk:"name"`
 	Description types.String `tfsdk:"description"`
@@ -51,23 +52,33 @@ func (d *NamespacesDataSource) Schema(ctx context.Context, req datasource.Schema
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
+						"id": schema.StringAttribute{
+							MarkdownDescription: "ID of this terraform resource.",
+							Computed:            true,
+						},
 						"namespace_id": schema.StringAttribute{
-							Computed: true,
+							MarkdownDescription: "ID of namespace.",
+							Computed:            true,
 						},
 						"name": schema.StringAttribute{
-							Computed: true,
+							MarkdownDescription: "Name of namespace.",
+							Computed:            true,
 						},
 						"description": schema.StringAttribute{
-							Computed: true,
+							MarkdownDescription: "Description of namespace.",
+							Computed:            true,
 						},
 						"quota": schema.Int64Attribute{
-							Computed: true,
+							MarkdownDescription: "Quota of namespace.",
+							Computed:            true,
 						},
 						"type": schema.Int64Attribute{
-							Computed: true,
+							MarkdownDescription: "type of namespace.",
+							Computed:            true,
 						},
 						"config_count": schema.Int64Attribute{
-							Computed: true,
+							MarkdownDescription: "Configuration count of namespace.",
+							Computed:            true,
 						},
 					},
 				},
@@ -116,6 +127,7 @@ func (d *NamespacesDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	for _, ns := range namespaces.Items {
 		namespace := NamespaceModel{
+			ID:          types.StringValue(ns.ID),
 			NamespaceId: types.StringValue(ns.ID),
 			Name:        types.StringValue(ns.Name),
 			Description: types.StringValue(ns.Description),

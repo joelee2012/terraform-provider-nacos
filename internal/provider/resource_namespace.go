@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/joelee2012/nacosctl/pkg/nacos"
 )
 
@@ -32,11 +31,24 @@ type NamespaceResource struct {
 
 // NamespaceResourceModel describes the resource data model.
 type NamespaceResourceModel struct {
-	Description types.String `tfsdk:"description"`
-	Name        types.String `tfsdk:"name"`
+	ID          types.String `tfsdk:"id"`
 	NamespaceId types.String `tfsdk:"namespace_id"`
+	Name        types.String `tfsdk:"name"`
+	Description types.String `tfsdk:"description"`
+	ConfigCount types.Int64  `tfsdk:"config_count"`
+	Quota       types.Int64  `tfsdk:"quota"`
+	Type        types.Int64  `tfsdk:"type"`
 }
 
+func (n *NamespaceResourceModel) SetFromNamespace(ns *nacos.Namespace) {
+	n.ID = types.StringValue(ns.ID)
+	n.NamespaceId = types.StringValue(ns.ID)
+	n.Description = types.StringValue(ns.Description)
+	n.ConfigCount = types.Int64Value(int64(ns.ConfigCount))
+	n.Name = types.StringValue(ns.Name)
+	n.Quota = types.Int64Value(int64(ns.Quota))
+	n.Type = types.Int64Value(int64(ns.Type))
+}
 func (r *NamespaceResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_namespace"
 }
@@ -44,25 +56,43 @@ func (r *NamespaceResource) Metadata(ctx context.Context, req resource.MetadataR
 func (r *NamespaceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Example resource",
+		MarkdownDescription: "Nacos namespace resource",
 
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				MarkdownDescription: "ID of namespace and this terraform resource.",
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"namespace_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				MarkdownDescription: "Example identifier",
+				MarkdownDescription: "ID of namespace",
 			},
 			"name": schema.StringAttribute{
-				MarkdownDescription: "Example configurable attribute with default value",
+				MarkdownDescription: "Name of namespace.",
 				Required:            true,
 			},
 			"description": schema.StringAttribute{
-				MarkdownDescription: "Example configurable attribute",
+				MarkdownDescription: "Description of namespace.",
 				Optional:            true,
-				// Computed:            true,
+			},
+			"quota": schema.Int64Attribute{
+				MarkdownDescription: "Quota of namespace.",
+				Computed:            true,
+			},
+			"type": schema.Int64Attribute{
+				MarkdownDescription: "type of namespace.",
+				Computed:            true,
+			},
+			"config_count": schema.Int64Attribute{
+				MarkdownDescription: "Configuration count of namespace.",
+				Computed:            true,
 			},
 		},
 	}
@@ -123,10 +153,16 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	// Write logs using the tflog package
-	// Documentation: https://terraform.io/plugin/log
-	tflog.Trace(ctx, "created a resource")
+	ns, err := r.client.GetNamespace(opts.ID)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Read Nacos namespace after creating resource",
+			err.Error(),
+		)
+		return
+	}
 
+	data.SetFromNamespace(ns)
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
@@ -151,7 +187,7 @@ func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	ns, err := r.client.GetNamespace(data.NamespaceId.ValueString())
+	ns, err := r.client.GetNamespace(data.ID.ValueString())
 	if err != nil {
 		if IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -163,9 +199,7 @@ func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	data.Name = types.StringValue(ns.Name)
-	data.Description = types.StringValue(ns.Description)
-	data.NamespaceId = types.StringValue(ns.ID)
+	data.SetFromNamespace(ns)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -195,6 +229,17 @@ func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
+	ns, err := r.client.GetNamespace(opts.ID)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Read Nacos namespace after updating resource",
+			err.Error(),
+		)
+		return
+	}
+
+	data.SetFromNamespace(ns)
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -220,7 +265,7 @@ func (r *NamespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 func (r *NamespaceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughWithIdentity(ctx, path.Root("namespace_id"), path.Root("namespace_id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 // Struct model for identity data handling.

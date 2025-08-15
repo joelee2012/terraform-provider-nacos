@@ -38,17 +38,18 @@ func (p *NacosProvider) Metadata(ctx context.Context, req provider.MetadataReque
 
 func (p *NacosProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Terraform Provider for Nacos",
 		Attributes: map[string]schema.Attribute{
 			"host": schema.StringAttribute{
-				MarkdownDescription: "URL of nacos server",
+				MarkdownDescription: "URL of nacos server, set the value statically in the configuration, or use the `NACOS_HOST` environment variable.",
 				Optional:            true,
 			},
 			"username": schema.StringAttribute{
-				MarkdownDescription: "Username for nacos server",
+				MarkdownDescription: "Username for nacos server, set the value statically in the configuration, or use the `NACOS_USERNAME` environment variable.",
 				Optional:            true,
 			},
 			"password": schema.StringAttribute{
-				MarkdownDescription: "Password for nacos server",
+				MarkdownDescription: "Password for nacos server, set the value statically in the configuration, or use the `NACOS_PASSWORD` environment variable.",
 				Optional:            true,
 			},
 		},
