@@ -23,12 +23,13 @@ data "nacos_namespace" "example" {
 
 ### Required
 
-- `namespace_id` (String) ID of namespace and this terraform resource.
+- `namespace_id` (String) ID of namespace.
 
 ### Read-Only
 
 - `config_count` (Number) Configuration count of namespace.
 - `description` (String) Description of namespace.
+- `id` (String) ID of this terraform resource.
 - `name` (String) Name of namespace.
 - `quota` (Number) Quota of namespace.
 - `type` (Number) type of namespace.

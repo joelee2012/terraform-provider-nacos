@@ -31,6 +31,7 @@ type NamespaceResource struct {
 
 // NamespaceResourceModel describes the resource data model.
 type NamespaceResourceModel struct {
+	ID          types.String `tfsdk:"id"`
 	NamespaceId types.String `tfsdk:"namespace_id"`
 	Name        types.String `tfsdk:"name"`
 	Description types.String `tfsdk:"description"`
@@ -40,6 +41,7 @@ type NamespaceResourceModel struct {
 }
 
 func (n *NamespaceResourceModel) SetFromNamespace(ns *nacos.Namespace) {
+	n.ID = types.StringValue(ns.ID)
 	n.NamespaceId = types.StringValue(ns.ID)
 	n.Description = types.StringValue(ns.Description)
 	n.ConfigCount = types.Int64Value(int64(ns.ConfigCount))
@@ -54,16 +56,23 @@ func (r *NamespaceResource) Metadata(ctx context.Context, req resource.MetadataR
 func (r *NamespaceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Example resource",
+		MarkdownDescription: "Nacos namespace resource",
 
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				MarkdownDescription: "ID of namespace and this terraform resource.",
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"namespace_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				MarkdownDescription: "ID of namespace and this terraform resource.",
+				MarkdownDescription: "ID of namespace",
 			},
 			"name": schema.StringAttribute{
 				MarkdownDescription: "Name of namespace.",
@@ -178,7 +187,7 @@ func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	ns, err := r.client.GetNamespace(data.NamespaceId.ValueString())
+	ns, err := r.client.GetNamespace(data.ID.ValueString())
 	if err != nil {
 		if IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -256,7 +265,7 @@ func (r *NamespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 func (r *NamespaceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughWithIdentity(ctx, path.Root("namespace_id"), path.Root("namespace_id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 // Struct model for identity data handling.

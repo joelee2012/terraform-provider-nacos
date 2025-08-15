@@ -3,12 +3,12 @@
 page_title: "nacos_namespace Resource - nacos"
 subcategory: ""
 description: |-
-  Example resource
+  Nacos namespace resource
 ---
 
 # nacos_namespace (Resource)
 
-Example resource
+Nacos namespace resource
 
 ## Example Usage
 
@@ -26,7 +26,7 @@ resource "nacos_namespace" "example" {
 ### Required
 
 - `name` (String) Name of namespace.
-- `namespace_id` (String) ID of namespace and this terraform resource.
+- `namespace_id` (String) ID of namespace
 
 ### Optional
 
@@ -35,6 +35,7 @@ resource "nacos_namespace" "example" {
 ### Read-Only
 
 - `config_count` (Number) Configuration count of namespace.
+- `id` (String) ID of namespace and this terraform resource.
 - `quota` (Number) Quota of namespace.
 - `type` (Number) type of namespace.
 

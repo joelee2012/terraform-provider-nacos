@@ -24,6 +24,7 @@ type NamespaceDataSource struct {
 }
 
 type NamespaceDataSourceModel struct {
+	ID          types.String `tfsdk:"id"`
 	NamespaceId types.String `tfsdk:"namespace_id"`
 	Name        types.String `tfsdk:"name"`
 	Description types.String `tfsdk:"description"`
@@ -42,8 +43,12 @@ func (d *NamespaceDataSource) Schema(ctx context.Context, req datasource.SchemaR
 		MarkdownDescription: "Namespace data source",
 
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				MarkdownDescription: "ID of this terraform resource.",
+				Computed:            true,
+			},
 			"namespace_id": schema.StringAttribute{
-				MarkdownDescription: "ID of namespace and this terraform resource.",
+				MarkdownDescription: "ID of namespace.",
 				Required:            true,
 			},
 			"name": schema.StringAttribute{
@@ -109,6 +114,7 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	data = NamespaceDataSourceModel{
+		ID:          types.StringValue(ns.ID),
 		NamespaceId: types.StringValue(ns.ID),
 		Name:        types.StringValue(ns.Name),
 		Description: types.StringValue(ns.Description),

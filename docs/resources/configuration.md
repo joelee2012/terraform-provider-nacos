@@ -3,12 +3,12 @@
 page_title: "nacos_configuration Resource - nacos"
 subcategory: ""
 description: |-
-  Configuration resource
+  Nacos configuration resource
 ---
 
 # nacos_configuration (Resource)
 
-Configuration resource
+Nacos configuration resource
 
 ## Example Usage
 
