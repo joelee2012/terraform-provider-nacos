@@ -36,6 +36,7 @@ type ConfigurationResource struct {
 
 // ConfigurationResourceModel describes the resource data model.
 type ConfigurationResourceModel struct {
+	ID               types.String `tfsdk:"id"`
 	DataID           types.String `tfsdk:"data_id"`
 	Group            types.String `tfsdk:"group"`
 	Content          types.String `tfsdk:"content"`
@@ -44,7 +45,6 @@ type ConfigurationResourceModel struct {
 	Application      types.String `tfsdk:"application"`
 	Description      types.String `tfsdk:"description"`
 	Tags             types.Set    `tfsdk:"tags"`
-	ID               types.String `tfsdk:"id"`
 	CreateTime       types.Int64  `tfsdk:"create_time"`
 	Md5              types.String `tfsdk:"md5"`
 	EncryptedDataKey types.String `tfsdk:"encrypt_key"`
@@ -98,6 +98,13 @@ func (r *ConfigurationResource) Schema(ctx context.Context, req resource.SchemaR
 		MarkdownDescription: "Configuration resource",
 
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				MarkdownDescription: "The ID of this Terraform resource. In the format of `<namespace_id>:<group>:<data_id>`.",
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"data_id": schema.StringAttribute{
 				MarkdownDescription: "Configuration data id.",
 				Required:            true,
@@ -170,13 +177,6 @@ func (r *ConfigurationResource) Schema(ctx context.Context, req resource.SchemaR
 			"modify_time": schema.Int64Attribute{
 				MarkdownDescription: "Configuration modify time.",
 				Computed:            true,
-			},
-			"id": schema.StringAttribute{
-				MarkdownDescription: "The ID of this Terraform resource. In the format of `<namespace_id>:<group>:<data_id>`.",
-				Computed:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 		},
 	}
@@ -258,7 +258,7 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 	config, err = r.client.GetConfig(getOpts)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read Nacos configuration when create resource",
+			"Unable to Read Nacos configuration after creating resource",
 			err.Error(),
 		)
 		return
@@ -361,7 +361,7 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read Nacos configuration when update resource",
+			"Unable to Read Nacos configuration after updating resource",
 			err.Error(),
 		)
 		return
