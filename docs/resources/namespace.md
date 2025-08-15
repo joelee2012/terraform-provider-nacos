@@ -32,6 +32,12 @@ resource "nacos_namespace" "example" {
 
 - `description` (String) Description of namespace.
 
+### Read-Only
+
+- `config_count` (Number) Configuration count of namespace.
+- `quota` (Number) Quota of namespace.
+- `type` (Number) type of namespace.
+
 ## Import
 
 Import is supported using the following syntax:

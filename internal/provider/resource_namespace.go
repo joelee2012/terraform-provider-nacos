@@ -34,18 +34,18 @@ type NamespaceResourceModel struct {
 	NamespaceId types.String `tfsdk:"namespace_id"`
 	Name        types.String `tfsdk:"name"`
 	Description types.String `tfsdk:"description"`
-	Quota       types.Int64  `tfsdk:"quota"`
 	ConfigCount types.Int64  `tfsdk:"config_count"`
+	Quota       types.Int64  `tfsdk:"quota"`
 	Type        types.Int64  `tfsdk:"type"`
 }
 
 func (n *NamespaceResourceModel) SetFromNamespace(ns *nacos.Namespace) {
 	n.NamespaceId = types.StringValue(ns.ID)
-	n.Name = types.StringValue(ns.Name)
 	n.Description = types.StringValue(ns.Description)
+	n.ConfigCount = types.Int64Value(int64(ns.ConfigCount))
+	n.Name = types.StringValue(ns.Name)
 	n.Quota = types.Int64Value(int64(ns.Quota))
 	n.Type = types.Int64Value(int64(ns.Type))
-	n.ConfigCount = types.Int64Value(int64(ns.ConfigCount))
 }
 func (r *NamespaceResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_namespace"
