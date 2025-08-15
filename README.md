@@ -1,3 +1,8 @@
+[![test](https://github.com/joelee2012/terraform-provider-nacos/actions/workflows/test.yml/badge.svg)](https://github.com/joelee2012/terraform-provider-nacos/actions/workflows/test.yml)
+[![goreleaser](https://github.com/joelee2012/terraform-provider-nacos/actions/workflows/release.yml/badge.svg)](https://github.com/joelee2012/terraform-provider-nacos/actions/workflows/release.yml)
+[![codecov](https://codecov.io/gh/joelee2012/terraform-provider-nacos/graph/badge.svg?token=PY470EX7J6)](https://codecov.io/gh/joelee2012/terraform-provider-nacos)
+
+
 # Terraform Provider for Nacos
 
 
