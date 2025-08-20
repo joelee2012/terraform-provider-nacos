@@ -48,11 +48,7 @@ EOF
 
 ### Read-Only
 
-- `create_time` (Number) Configuration created time.
-- `encrypt_key` (String) Configuration encrypt key.
 - `id` (String) The ID of this Terraform resource. In the format of `<namespace_id>:<group>:<data_id>`.
-- `md5` (String) Configuration md5.
-- `modify_time` (Number) Configuration modify time.
 
 ## Import
 

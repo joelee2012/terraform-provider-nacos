@@ -169,20 +169,20 @@ func (d *ConfigurationsDataSource) Read(ctx context.Context, req datasource.Read
 		)
 		return
 	}
-	for _, config := range allCs.Items {
+	for _, cfg := range allCs.Items {
 		data.Items = append(data.Items, &ConfigurationModel{
-			ID:               types.StringValue(BuildThreePartID(config.NamespaceId, config.Group, config.DataID)),
-			DataID:           types.StringValue(config.DataID),
-			Group:            types.StringValue(config.Group),
-			Content:          types.StringValue(config.Content),
-			NamespaceID:      types.StringValue(config.NamespaceId),
-			Type:             types.StringValue(config.Type),
-			Md5:              types.StringValue(config.Md5),
-			EncryptedDataKey: types.StringValue(config.EncryptedDataKey),
-			Application:      types.StringValue(config.AppName),
-			CreateTime:       types.Int64Value(config.CreateTime),
-			ModifyTime:       types.Int64Value(config.ModifyTime),
-			Desc:             types.StringValue(config.Desc),
+			ID:               types.StringValue(BuildThreePartID(cfg.NamespaceID, cfg.Group, cfg.DataID)),
+			DataID:           types.StringValue(cfg.DataID),
+			Group:            types.StringValue(cfg.Group),
+			Content:          types.StringValue(cfg.Content),
+			NamespaceID:      types.StringValue(cfg.NamespaceID),
+			Type:             types.StringValue(cfg.Type),
+			Md5:              types.StringValue(cfg.Md5),
+			EncryptedDataKey: types.StringValue(cfg.EncryptedDataKey),
+			Application:      types.StringValue(cfg.AppName),
+			CreateTime:       types.Int64Value(cfg.CreateTime),
+			ModifyTime:       types.Int64Value(cfg.ModifyTime),
+			Desc:             types.StringValue(cfg.Desc),
 			// Tags:             types.StringValue(config.Tags),
 		})
 	}

@@ -34,10 +34,7 @@ resource "nacos_namespace" "example" {
 
 ### Read-Only
 
-- `config_count` (Number) Configuration count of namespace.
 - `id` (String) ID of namespace and this terraform resource.
-- `quota` (Number) Quota of namespace.
-- `type` (Number) type of namespace.
 
 ## Import
 

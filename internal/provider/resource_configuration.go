@@ -36,34 +36,26 @@ type ConfigurationResource struct {
 
 // ConfigurationResourceModel describes the resource data model.
 type ConfigurationResourceModel struct {
-	ID               types.String `tfsdk:"id"`
-	DataID           types.String `tfsdk:"data_id"`
-	Group            types.String `tfsdk:"group"`
-	Content          types.String `tfsdk:"content"`
-	NamespaceID      types.String `tfsdk:"namespace_id"`
-	Type             types.String `tfsdk:"type"`
-	Application      types.String `tfsdk:"application"`
-	Description      types.String `tfsdk:"description"`
-	Tags             types.Set    `tfsdk:"tags"`
-	CreateTime       types.Int64  `tfsdk:"create_time"`
-	Md5              types.String `tfsdk:"md5"`
-	EncryptedDataKey types.String `tfsdk:"encrypt_key"`
-	ModifyTime       types.Int64  `tfsdk:"modify_time"`
+	ID          types.String `tfsdk:"id"`
+	DataID      types.String `tfsdk:"data_id"`
+	Group       types.String `tfsdk:"group"`
+	Content     types.String `tfsdk:"content"`
+	NamespaceID types.String `tfsdk:"namespace_id"`
+	Type        types.String `tfsdk:"type"`
+	Application types.String `tfsdk:"application"`
+	Description types.String `tfsdk:"description"`
+	Tags        types.Set    `tfsdk:"tags"`
 }
 
 func (c *ConfigurationResourceModel) SetFromConfiguration(ctx context.Context, cfg *nacos.Config) diag.Diagnostics {
-	c.ID = types.StringValue(BuildThreePartID(cfg.NamespaceId, cfg.Group, cfg.DataID))
+	c.ID = types.StringValue(BuildThreePartID(cfg.NamespaceID, cfg.Group, cfg.DataID))
 	c.DataID = types.StringValue(cfg.DataID)
 	c.Group = types.StringValue(cfg.Group)
-	c.NamespaceID = types.StringValue(cfg.NamespaceId)
+	c.NamespaceID = types.StringValue(cfg.NamespaceID)
 	c.Application = types.StringValue(cfg.AppName)
 	c.Content = types.StringValue(cfg.Content)
 	c.Description = types.StringValue(cfg.Desc)
 	c.Type = types.StringValue(cfg.Type)
-	c.Md5 = types.StringValue(cfg.Md5)
-	c.CreateTime = types.Int64Value(cfg.CreateTime)
-	c.ModifyTime = types.Int64Value(cfg.ModifyTime)
-	c.EncryptedDataKey = types.StringValue(cfg.EncryptedDataKey)
 	var diags diag.Diagnostics
 	if cfg.Tags != "" {
 		tags, diags := types.SetValueFrom(ctx, types.StringType, strings.Split(cfg.Tags, ","))
@@ -88,6 +80,7 @@ func (c *ConfigurationResourceModel) TagsToString(ctx context.Context) (string, 
 	}
 	return strings.Join(tags, ","), diags
 }
+
 func (r *ConfigurationResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_configuration"
 }
@@ -162,22 +155,6 @@ func (r *ConfigurationResource) Schema(ctx context.Context, req resource.SchemaR
 				ElementType:         types.StringType,
 				Optional:            true,
 			},
-			"md5": schema.StringAttribute{
-				MarkdownDescription: "Configuration md5.",
-				Computed:            true,
-			},
-			"encrypt_key": schema.StringAttribute{
-				MarkdownDescription: "Configuration encrypt key.",
-				Computed:            true,
-			},
-			"create_time": schema.Int64Attribute{
-				MarkdownDescription: "Configuration created time.",
-				Computed:            true,
-			},
-			"modify_time": schema.Int64Attribute{
-				MarkdownDescription: "Configuration modify time.",
-				Computed:            true,
-			},
 		},
 	}
 }
@@ -211,19 +188,24 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tflog.Debug(ctx, fmt.Sprintf("read plan %#v", data))
 	getOpts := &nacos.GetCSOpts{
 		DataID:      data.DataID.ValueString(),
 		Group:       data.Group.ValueString(),
 		NamespaceID: data.NamespaceID.ValueString(),
 	}
+	tflog.Debug(ctx, "creating configuration", map[string]any{
+		"namespace_id": getOpts.NamespaceID,
+		"group":        getOpts.Group,
+		"data_id":      getOpts.DataID,
+	})
+
 	config, err := r.client.GetConfig(getOpts)
+	id := BuildThreePartID(getOpts.NamespaceID, getOpts.Group, getOpts.DataID)
 	if err == nil && config != nil {
-		key := BuildThreePartID(data.NamespaceID.ValueString(), data.Group.ValueString(), data.DataID.ValueString())
 		resp.Diagnostics.AddError(
 			"Configuration already exists",
 			fmt.Sprintf("A configuration with namespace_id=%s,group=%s,data_id=%s already exists. "+
-				"Run `terraform import nacos_configuration.example %s` to manage it.", getOpts.NamespaceID, getOpts.Group, getOpts.DataID, key),
+				"Run `terraform import nacos_configuration.example %s` to manage it.", getOpts.NamespaceID, getOpts.Group, getOpts.DataID, id),
 		)
 		return
 	}
@@ -254,21 +236,13 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 		)
 		return
 	}
+	data.ID = types.StringValue(id)
 
-	config, err = r.client.GetConfig(getOpts)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Read Nacos configuration after creating resource",
-			err.Error(),
-		)
-		return
-	}
-	resp.Diagnostics.Append(data.SetFromConfiguration(ctx, config)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	tflog.Debug(ctx, fmt.Sprintf("create resource %#v", data))
+	tflog.Debug(ctx, "created configuration", map[string]any{
+		"namespace_id": getOpts.NamespaceID,
+		"group":        getOpts.Group,
+		"data_id":      getOpts.DataID,
+	})
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -282,7 +256,6 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tflog.Debug(ctx, fmt.Sprintf("read state %#v", data))
 
 	namespaceId, group, dataId, err := ParseThreePartID(data.ID.ValueString())
 	if err != nil {
@@ -312,7 +285,11 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tflog.Debug(ctx, fmt.Sprintf("refresh resource %#v", data))
+	tflog.Debug(ctx, "found configuration", map[string]any{
+		"namespace_id": namespaceId,
+		"group":        group,
+		"data_id":      dataId,
+	})
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -326,7 +303,6 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tflog.Debug(ctx, fmt.Sprintf("read plan %#v", data))
 
 	opts := &nacos.CreateCSOpts{
 		DataID:      data.DataID.ValueString(),
@@ -371,7 +347,11 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	tflog.Debug(ctx, fmt.Sprintf("update resource %#v", data))
+	tflog.Debug(ctx, "updated configuration", map[string]any{
+		"namespace_id": opts.NamespaceID,
+		"group":        opts.Group,
+		"data_id":      opts.DataID,
+	})
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
