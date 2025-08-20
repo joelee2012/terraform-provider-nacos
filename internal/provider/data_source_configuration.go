@@ -135,7 +135,7 @@ func (d *ConfigurationDataSource) Read(ctx context.Context, req datasource.ReadR
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	config, err := d.client.GetConfig(&nacos.GetCSOpts{DataID: data.DataID.ValueString(), Group: data.Group.ValueString(), NamespaceID: data.NamespaceID.ValueString()})
+	cfg, err := d.client.GetConfig(&nacos.GetCSOpts{DataID: data.DataID.ValueString(), Group: data.Group.ValueString(), NamespaceID: data.NamespaceID.ValueString()})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Nacos configuration",
@@ -145,21 +145,21 @@ func (d *ConfigurationDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 
 	data = ConfigurationDataSourceModel{
-		ID:               types.StringValue(BuildThreePartID(config.NamespaceID, config.Group, config.DataID)),
-		DataID:           types.StringValue(config.DataID),
-		Group:            types.StringValue(config.Group),
-		Content:          types.StringValue(config.Content),
-		NamespaceID:      types.StringValue(config.NamespaceID),
-		Type:             types.StringValue(config.Type),
-		Md5:              types.StringValue(config.Md5),
-		EncryptedDataKey: types.StringValue(config.EncryptedDataKey),
-		Application:      types.StringValue(config.AppName),
-		CreateTime:       types.Int64Value(config.CreateTime),
-		ModifyTime:       types.Int64Value(config.ModifyTime),
-		Desc:             types.StringValue(config.Desc),
+		ID:               types.StringValue(BuildThreePartID(cfg.NamespaceID, cfg.Group, cfg.DataID)),
+		DataID:           types.StringValue(cfg.DataID),
+		Group:            types.StringValue(cfg.Group),
+		Content:          types.StringValue(cfg.Content),
+		NamespaceID:      types.StringValue(cfg.NamespaceID),
+		Type:             types.StringValue(cfg.Type),
+		Md5:              types.StringValue(cfg.Md5),
+		EncryptedDataKey: types.StringValue(cfg.EncryptedDataKey),
+		Application:      types.StringValue(cfg.AppName),
+		CreateTime:       types.Int64Value(cfg.CreateTime),
+		ModifyTime:       types.Int64Value(cfg.ModifyTime),
+		Desc:             types.StringValue(cfg.Desc),
 	}
-	if config.Tags != "" {
-		tags, diags := types.SetValueFrom(ctx, types.StringType, strings.Split(config.Tags, ","))
+	if cfg.Tags != "" {
+		tags, diags := types.SetValueFrom(ctx, types.StringType, strings.Split(cfg.Tags, ","))
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return

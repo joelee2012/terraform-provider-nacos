@@ -198,6 +198,7 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 		"group":        getOpts.Group,
 		"data_id":      getOpts.DataID,
 	})
+
 	config, err := r.client.GetConfig(getOpts)
 	id := BuildThreePartID(getOpts.NamespaceID, getOpts.Group, getOpts.DataID)
 	if err == nil && config != nil {
@@ -235,13 +236,13 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 		)
 		return
 	}
+	data.ID = types.StringValue(id)
+
 	tflog.Debug(ctx, "created configuration", map[string]any{
 		"namespace_id": getOpts.NamespaceID,
 		"group":        getOpts.Group,
 		"data_id":      getOpts.DataID,
 	})
-	data.ID = types.StringValue(id)
-	tflog.Debug(ctx, fmt.Sprintf("create resource %#v", data))
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -255,7 +256,6 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tflog.Debug(ctx, fmt.Sprintf("read state %#v", data))
 
 	namespaceId, group, dataId, err := ParseThreePartID(data.ID.ValueString())
 	if err != nil {
