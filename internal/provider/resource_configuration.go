@@ -47,14 +47,14 @@ type ConfigurationResourceModel struct {
 	Tags        types.Set    `tfsdk:"tags"`
 }
 
-func (c *ConfigurationResourceModel) SetFromConfiguration(ctx context.Context, cfg *nacos.Config) diag.Diagnostics {
+func (c *ConfigurationResourceModel) SetFromConfiguration(ctx context.Context, cfg *nacos.Configuration) diag.Diagnostics {
 	c.ID = types.StringValue(BuildThreePartID(cfg.NamespaceID, cfg.Group, cfg.DataID))
 	c.DataID = types.StringValue(cfg.DataID)
 	c.Group = types.StringValue(cfg.Group)
 	c.NamespaceID = types.StringValue(cfg.NamespaceID)
-	c.Application = types.StringValue(cfg.AppName)
+	c.Application = types.StringValue(cfg.Application)
 	c.Content = types.StringValue(cfg.Content)
-	c.Description = types.StringValue(cfg.Desc)
+	c.Description = types.StringValue(cfg.Description)
 	c.Type = types.StringValue(cfg.Type)
 	var diags diag.Diagnostics
 	if cfg.Tags != "" {
@@ -215,8 +215,8 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 		Content:     data.Content.ValueString(),
 		NamespaceID: data.NamespaceID.ValueString(),
 		Type:        data.Type.ValueString(),
-		AppName:     data.Application.ValueString(),
-		Desc:        data.Description.ValueString(),
+		Application: data.Application.ValueString(),
+		Description: data.Description.ValueString(),
 	}
 
 	if !data.Tags.IsNull() && !data.Tags.IsUnknown() {
@@ -310,8 +310,8 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 		Content:     data.Content.ValueString(),
 		NamespaceID: data.NamespaceID.ValueString(),
 		Type:        data.Type.ValueString(),
-		AppName:     data.Application.ValueString(),
-		Desc:        data.Description.ValueString(),
+		Application: data.Application.ValueString(),
+		Description: data.Description.ValueString(),
 	}
 
 	if !data.Tags.IsNull() && !data.Tags.IsUnknown() {
