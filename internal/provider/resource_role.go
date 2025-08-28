@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -47,7 +48,7 @@ func (r *RoleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				MarkdownDescription: "ID this terraform resource.",
+				MarkdownDescription: "ID this terraform resource, In the format of `<name>:<username>`.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -100,22 +101,23 @@ func (r *RoleResource) Create(ctx context.Context, req resource.CreateRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	rolename := data.Name.ValueString()
+	name := data.Name.ValueString()
 	username := data.Username.ValueString()
 
-	tflog.Debug(ctx, "creating role", map[string]any{"name": rolename})
+	tflog.Debug(ctx, "creating role", map[string]any{"name": name, "username": username})
 
-	role, err := r.client.GetRole(rolename)
+	role, err := r.client.GetRole(name, username)
+	id := fmt.Sprintf("%s:%s", name, username)
 	if err == nil && role != nil {
 		resp.Diagnostics.AddError(
 			"Role already exists",
-			fmt.Sprintf("A role with name=%s already exists. "+
-				"Run `terraform import nacos_role.example %s` to manage it.", rolename, rolename),
+			fmt.Sprintf("A role with name=%s,username=%s already exists. "+
+				"Run `terraform import nacos_role.example %s` to manage it.", name, username, id),
 		)
 		return
 	}
 
-	err = r.client.CreateRole(rolename, username)
+	err = r.client.CreateRole(name, username)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Create Nacos role",
@@ -124,9 +126,9 @@ func (r *RoleResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	data.ID = data.Name
+	data.ID = types.StringValue(id)
 
-	tflog.Debug(ctx, "created role", map[string]any{"name": rolename})
+	tflog.Debug(ctx, "created role", map[string]any{"name": name, "username": username})
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
@@ -147,7 +149,14 @@ func (r *RoleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 	id := data.ID.ValueString()
-	role, err := r.client.GetRole(id)
+	parts := strings.Split(id, ":")
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		resp.Diagnostics.AddError(
+			"unexpected ID format (%q). expected <role_name>:<username>", id,
+		)
+	}
+	name, username := parts[0], parts[1]
+	role, err := r.client.GetRole(name, username)
 	if err != nil {
 		if IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -158,12 +167,9 @@ func (r *RoleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		)
 		return
 	}
-	tflog.Debug(ctx, "found role", map[string]any{"name": id})
-	data = RoleResourceModel{
-		ID:       types.StringValue(role.Name),
-		Name:     types.StringValue(role.Name),
-		Username: types.StringValue(role.Username),
-	}
+	tflog.Debug(ctx, "found role", map[string]any{"name": name, "username": username})
+	data.Name = types.StringValue(role.Name)
+	data.Username = types.StringValue(role.Username)
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -192,7 +198,10 @@ func (r *RoleResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
-	err := r.client.DeleteRole(data.Name.ValueString(), data.Username.ValueString())
+	name := data.Name.ValueString()
+	username := data.Username.ValueString()
+	tflog.Debug(ctx, "deleting role", map[string]any{"name": name, "username": username})
+	err := r.client.DeleteRole(name, username)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Create Nacos role",
@@ -200,7 +209,7 @@ func (r *RoleResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		)
 		return
 	}
-	tflog.Debug(ctx, "deleted role", map[string]any{"name": data.Name.ValueString()})
+	tflog.Debug(ctx, "deleted role", map[string]any{"name": name, "username": username})
 }
 
 func (r *RoleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

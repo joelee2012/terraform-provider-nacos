@@ -165,6 +165,7 @@ func (p *NacosProvider) Resources(ctx context.Context) []func() resource.Resourc
 		NewConfigurationResource,
 		NewUserResource,
 		NewRoleResource,
+		NewPermissionResource,
 	}
 }
 

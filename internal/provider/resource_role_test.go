@@ -27,7 +27,9 @@ func TestAccRoleResource(t *testing.T) {
 	resourceName := "nacos_role.test"
 	username := "tf-user"
 	name := "tf-role"
+	id := fmt.Sprintf("%s:%s", name, username)
 	updatedUsername := "tf-user-updated"
+	idUpdated := fmt.Sprintf("%s:%s", name, updatedUsername)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -40,7 +42,7 @@ func TestAccRoleResource(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						resourceName,
 						tfjsonpath.New("id"),
-						knownvalue.StringExact(name),
+						knownvalue.StringExact(id),
 					),
 					statecheck.ExpectKnownValue(
 						resourceName,
@@ -68,7 +70,7 @@ func TestAccRoleResource(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						resourceName,
 						tfjsonpath.New("id"),
-						knownvalue.StringExact(name),
+						knownvalue.StringExact(idUpdated),
 					),
 					statecheck.ExpectKnownValue(
 						resourceName,
