@@ -92,6 +92,17 @@ func (r *RoleResource) Configure(ctx context.Context, req resource.ConfigureRequ
 	r.client = client
 }
 
+func BuildRoleID(name, username string) string {
+	return fmt.Sprintf("%s:%s", name, username)
+}
+
+func ParseRoleID(id string) (string, string, error) {
+	parts := strings.Split(id, ":")
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected ID format (%q). expected <role_name>:<username>", id)
+	}
+	return parts[0], parts[1], nil
+}
 func (r *RoleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data RoleResourceModel
 
@@ -107,7 +118,7 @@ func (r *RoleResource) Create(ctx context.Context, req resource.CreateRequest, r
 	tflog.Debug(ctx, "creating role", map[string]any{"name": name, "username": username})
 
 	role, err := r.client.GetRole(name, username)
-	id := fmt.Sprintf("%s:%s", name, username)
+	id := BuildRoleID(name, username)
 	if err == nil && role != nil {
 		resp.Diagnostics.AddError(
 			"Role already exists",
@@ -149,13 +160,14 @@ func (r *RoleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 	id := data.ID.ValueString()
-	parts := strings.Split(id, ":")
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+	name, username, err := ParseRoleID(id)
+	if err != nil {
 		resp.Diagnostics.AddError(
-			"unexpected ID format (%q). expected <role_name>:<username>", id,
+			"Unable to Parse Nacos role",
+			err.Error(),
 		)
+		return
 	}
-	name, username := parts[0], parts[1]
 	role, err := r.client.GetRole(name, username)
 	if err != nil {
 		if IsNotFoundError(err) {
