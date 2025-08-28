@@ -65,14 +65,14 @@ func (r *PermissionResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 			},
 			"resource": schema.StringAttribute{
-				MarkdownDescription: "resource to bind this permission, the form is `<namespace>:*.*`",
+				MarkdownDescription: "resource to bind this permission, the form is `<namespace_id>:<group>:<data_id>`",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"permission": schema.StringAttribute{
-				MarkdownDescription: "permission to bind this permission, the form is <namespace>:*:*",
+				MarkdownDescription: "permission to bind this permission, options are `r`, `w`, `rw`",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
