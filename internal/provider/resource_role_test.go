@@ -12,8 +12,12 @@ import (
 
 func testAccRoleSourceConfig(name, username string) string {
 	return fmt.Sprintf(`
+resource "nacos_user" "test" {
+	username = "%s"
+	password = "123456"
+}
 resource "nacos_role" "test" {
-  username = "%s"
+  username = nacos_user.test.username
   name = "%s"
 }
 `, username, name)
@@ -21,7 +25,7 @@ resource "nacos_role" "test" {
 
 func TestAccRoleResource(t *testing.T) {
 	resourceName := "nacos_role.test"
-	username := "nacos"
+	username := "tf-user"
 	name := "tf-role"
 	updatedUsername := "tf-user-updated"
 

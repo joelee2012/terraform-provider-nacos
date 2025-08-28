@@ -58,7 +58,7 @@ func (r *RoleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				MarkdownDescription: "name of user",
+				MarkdownDescription: "name of user to bind this role",
 			},
 			"name": schema.StringAttribute{
 				MarkdownDescription: "name of role.",
