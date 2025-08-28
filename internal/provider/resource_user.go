@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/joelee2012/nacosctl/pkg/nacos"
@@ -31,9 +33,11 @@ type UserResource struct {
 
 // UserResourceModel describes the resource data model.
 type UserResourceModel struct {
-	ID       types.String `tfsdk:"id"`
-	Username types.String `tfsdk:"username"`
-	Password types.String `tfsdk:"password"`
+	ID                types.String `tfsdk:"id"`
+	Username          types.String `tfsdk:"username"`
+	Password          types.String `tfsdk:"password"`
+	PasswordWO        types.String `tfsdk:"password_wo"`
+	PasswordWOVersion types.Int64  `tfsdk:"password_wo_version"`
 }
 
 func (r *UserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -43,11 +47,11 @@ func (r *UserResource) Metadata(ctx context.Context, req resource.MetadataReques
 func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Nacos namespace resource",
+		MarkdownDescription: "Nacos user resource",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				MarkdownDescription: "ID of namespace and this terraform resource.",
+				MarkdownDescription: "ID this terraform resource.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -63,7 +67,29 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			},
 			"password": schema.StringAttribute{
 				MarkdownDescription: "passwrod of user.",
-				Required:            true,
+				Optional:            true,
+				Sensitive:           true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					stringvalidator.PreferWriteOnlyAttribute(
+						path.MatchRoot("password_wo"),
+					),
+				},
+			},
+			"password_wo": schema.StringAttribute{
+				MarkdownDescription: "write only passwrod of user.",
+				Optional:            true,
+				WriteOnly:           true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"password_wo_version": schema.Int64Attribute{
+				Optional: true,
 			},
 		},
 	}
@@ -122,7 +148,6 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	data.ID = data.Username
-
 	tflog.Debug(ctx, "created user", map[string]any{"id": username})
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -144,7 +169,8 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	user, err := r.client.GetUser(data.Username.ValueString())
+	id := data.ID.ValueString()
+	user, err := r.client.GetUser(id)
 	if err != nil {
 		if IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -155,12 +181,11 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		)
 		return
 	}
-	tflog.Debug(ctx, "found user", map[string]any{"id": data.ID.ValueString()})
-	data = UserResourceModel{
-		ID:       types.StringValue(user.Name),
-		Username: types.StringValue(user.Name),
-		Password: types.StringValue(user.Password),
-	}
+	tflog.Debug(ctx, "found user", map[string]any{"username": user.Name})
+
+	data.Username = types.StringValue(user.Name)
+	data.ID = data.Username
+	// data.Password = types.StringNull()
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -174,18 +199,6 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	err := r.client.CreateUser(data.Username.ValueString(), data.Password.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Create Nacos user",
-			err.Error(),
-		)
-		return
-	}
-	data.ID = data.Username
-
-	tflog.Debug(ctx, "updated user", map[string]any{"id": data.ID.ValueString()})
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

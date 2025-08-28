@@ -10,19 +10,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
-func testAccUserSourceConfig(username, password string) string {
+func testAccRoleSourceConfig(name, username string) string {
 	return fmt.Sprintf(`
-resource "nacos_user" "test" {
+resource "nacos_role" "test" {
   username = "%s"
-  password = "%s"
+  name = "%s"
 }
-`, username, password)
+`, username, name)
 }
 
-func TestAccUserResource(t *testing.T) {
-	resourceName := "nacos_user.test"
-	username := "tf-user"
-	password := "123456"
+func TestAccRoleResource(t *testing.T) {
+	resourceName := "nacos_role.test"
+	username := "nacos"
+	name := "tf-role"
 	updatedUsername := "tf-user-updated"
 
 	resource.Test(t, resource.TestCase{
@@ -31,12 +31,12 @@ func TestAccUserResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccUserSourceConfig(username, password),
+				Config: testAccRoleSourceConfig(name, username),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						resourceName,
 						tfjsonpath.New("id"),
-						knownvalue.StringExact(username),
+						knownvalue.StringExact(name),
 					),
 					statecheck.ExpectKnownValue(
 						resourceName,
@@ -45,27 +45,26 @@ func TestAccUserResource(t *testing.T) {
 					),
 					statecheck.ExpectKnownValue(
 						resourceName,
-						tfjsonpath.New("password"),
-						knownvalue.StringExact(password),
+						tfjsonpath.New("name"),
+						knownvalue.StringExact(name),
 					),
 				},
 			},
 
 			// ImportState testing
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			// Update and Read testing
 			{
-				Config: testAccUserSourceConfig(updatedUsername, password),
+				Config: testAccRoleSourceConfig(name, updatedUsername),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						resourceName,
 						tfjsonpath.New("id"),
-						knownvalue.StringExact(updatedUsername),
+						knownvalue.StringExact(name),
 					),
 					statecheck.ExpectKnownValue(
 						resourceName,
@@ -74,8 +73,8 @@ func TestAccUserResource(t *testing.T) {
 					),
 					statecheck.ExpectKnownValue(
 						resourceName,
-						tfjsonpath.New("password"),
-						knownvalue.StringExact(password),
+						tfjsonpath.New("name"),
+						knownvalue.StringExact(name),
 					),
 				},
 			},
