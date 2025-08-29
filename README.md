@@ -79,7 +79,7 @@ resource "nacos_role" "test" {
 resource "nacos_permission" "test" {
   role_name  = nacos_role.test.name
   resource   = "${resource.nacos_namespace.example.namespace_id}:*:*"
-  permission = "r"
+  action = "r"
 }
 
 ```

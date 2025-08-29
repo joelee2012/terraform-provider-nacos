@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
-func testAccPermissionSourceConfig(role_name, username, permission string) string {
+func testAccPermissionSourceConfig(role_name, username, action string) string {
 	return fmt.Sprintf(`
 resource "nacos_user" "test" {
 	username = "%s"
@@ -24,19 +24,19 @@ resource "nacos_role" "test" {
 resource "nacos_permission" "test" {
   role_name = nacos_role.test.name
   resource = ":*:*"
-  permission = "%s"
+  action = "%s"
 }
-`, username, role_name, permission)
+`, username, role_name, action)
 }
 
 func TestAccPermissionResource(t *testing.T) {
 	resourceName := "nacos_permission.test"
 	username := "tf-user"
 	role_name := "tf-role"
-	permission := "r"
-	id := fmt.Sprintf("%s:%s:%s", role_name, ":*:*", permission)
-	updatedPermission := "rw"
-	idUpdated := fmt.Sprintf("%s:%s:%s", role_name, ":*:*", updatedPermission)
+	action := "r"
+	id := fmt.Sprintf("%s:%s:%s", role_name, ":*:*", action)
+	updatedAction := "rw"
+	idUpdated := fmt.Sprintf("%s:%s:%s", role_name, ":*:*", updatedAction)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -44,7 +44,7 @@ func TestAccPermissionResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccPermissionSourceConfig(role_name, username, permission),
+				Config: testAccPermissionSourceConfig(role_name, username, action),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						resourceName,
@@ -58,8 +58,8 @@ func TestAccPermissionResource(t *testing.T) {
 					),
 					statecheck.ExpectKnownValue(
 						resourceName,
-						tfjsonpath.New("permission"),
-						knownvalue.StringExact(permission),
+						tfjsonpath.New("action"),
+						knownvalue.StringExact(action),
 					),
 				},
 			},
@@ -72,7 +72,7 @@ func TestAccPermissionResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccPermissionSourceConfig(role_name, username, updatedPermission),
+				Config: testAccPermissionSourceConfig(role_name, username, updatedAction),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						resourceName,
@@ -86,8 +86,8 @@ func TestAccPermissionResource(t *testing.T) {
 					),
 					statecheck.ExpectKnownValue(
 						resourceName,
-						tfjsonpath.New("permission"),
-						knownvalue.StringExact(updatedPermission),
+						tfjsonpath.New("action"),
+						knownvalue.StringExact(updatedAction),
 					),
 				},
 			},
