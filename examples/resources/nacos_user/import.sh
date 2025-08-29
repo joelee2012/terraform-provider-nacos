@@ -1,0 +1,1 @@
+terraform import nacos_user.example "user1"

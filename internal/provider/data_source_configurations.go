@@ -43,7 +43,7 @@ type ConfigurationModel struct {
 	Application      types.String `tfsdk:"application"`
 	CreateTime       types.Int64  `tfsdk:"create_time"`
 	ModifyTime       types.Int64  `tfsdk:"modify_time"`
-	Desc             types.String `tfsdk:"description"`
+	Description      types.String `tfsdk:"description"`
 	// Tags             types.Set    `tfsdk:"tags"`
 }
 
@@ -153,7 +153,7 @@ func (d *ConfigurationsDataSource) Read(ctx context.Context, req datasource.Read
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	allCs := new(nacos.ConfigList)
+	allCs := new(nacos.ConfigurationList)
 	var err error
 	if data.DataID.IsNull() && data.Group.IsNull() && data.NamespaceID.IsNull() {
 		allCs, err = d.client.ListAllConfig()
@@ -179,10 +179,10 @@ func (d *ConfigurationsDataSource) Read(ctx context.Context, req datasource.Read
 			Type:             types.StringValue(cfg.Type),
 			Md5:              types.StringValue(cfg.Md5),
 			EncryptedDataKey: types.StringValue(cfg.EncryptedDataKey),
-			Application:      types.StringValue(cfg.AppName),
+			Application:      types.StringValue(cfg.Application),
 			CreateTime:       types.Int64Value(cfg.CreateTime),
 			ModifyTime:       types.Int64Value(cfg.ModifyTime),
-			Desc:             types.StringValue(cfg.Desc),
+			Description:      types.StringValue(cfg.Description),
 			// Tags:             types.StringValue(config.Tags),
 		})
 	}
