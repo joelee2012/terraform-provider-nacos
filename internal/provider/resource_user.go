@@ -4,14 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/joelee2012/nacosctl/pkg/nacos"
@@ -33,11 +31,9 @@ type UserResource struct {
 
 // UserResourceModel describes the resource data model.
 type UserResourceModel struct {
-	ID                types.String `tfsdk:"id"`
-	Username          types.String `tfsdk:"username"`
-	Password          types.String `tfsdk:"password"`
-	PasswordWO        types.String `tfsdk:"password_wo"`
-	PasswordWOVersion types.Int64  `tfsdk:"password_wo_version"`
+	ID       types.String `tfsdk:"id"`
+	Username types.String `tfsdk:"username"`
+	Password types.String `tfsdk:"password"`
 }
 
 func (r *UserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -61,36 +57,16 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
 				},
 				MarkdownDescription: "name of user",
 			},
 			"password": schema.StringAttribute{
 				MarkdownDescription: "passwrod of user.",
-				Optional:            true,
+				Required:            true,
 				Sensitive:           true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
 				},
-				Validators: []validator.String{
-					stringvalidator.PreferWriteOnlyAttribute(
-						path.MatchRoot("password_wo"),
-					),
-				},
-			},
-			"password_wo": schema.StringAttribute{
-				MarkdownDescription: "write only passwrod of user.",
-				Optional:            true,
-				WriteOnly:           true,
-				Sensitive:           true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"password_wo_version": schema.Int64Attribute{
-				Optional: true,
 			},
 		},
 	}
@@ -126,7 +102,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 	username := data.Username.ValueString()
-
+	password := data.Password.ValueString()
 	tflog.Debug(ctx, "creating user", map[string]any{"username": username})
 
 	user, err := r.client.GetUser(username)
@@ -139,7 +115,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	err = r.client.CreateUser(username, data.Password.ValueString())
+	err = r.client.CreateUser(username, password)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Create Nacos user",

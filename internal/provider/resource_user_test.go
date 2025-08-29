@@ -56,7 +56,7 @@ func TestAccUserResource(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password", "password_wo"},
+				ImportStateVerifyIgnore: []string{"password"},
 			},
 			// Update and Read testing
 			{
