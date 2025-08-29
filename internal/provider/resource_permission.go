@@ -34,10 +34,10 @@ type PermissionResource struct {
 
 // PermissionResourceModel describes the resource data model.
 type PermissionResourceModel struct {
-	ID         types.String `tfsdk:"id"`
-	RoleName   types.String `tfsdk:"role_name"`
-	Resource   types.String `tfsdk:"resource"`
-	Permission types.String `tfsdk:"permission"`
+	ID       types.String `tfsdk:"id"`
+	RoleName types.String `tfsdk:"role_name"`
+	Resource types.String `tfsdk:"resource"`
+	Action   types.String `tfsdk:"action"`
 }
 
 func (r *PermissionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -51,28 +51,28 @@ func (r *PermissionResource) Schema(ctx context.Context, req resource.SchemaRequ
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				MarkdownDescription: "ID this terraform resource, In the format of `<role_name>:<resource>:<permission>`",
+				MarkdownDescription: "ID this terraform resource, in the format of `<role_name>:<resource>:<action>`",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"role_name": schema.StringAttribute{
-				MarkdownDescription: "role name to bind this permission",
+				MarkdownDescription: "Role name to bind this permission",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"resource": schema.StringAttribute{
-				MarkdownDescription: "resource to bind this permission, the form is `<namespace_id>:<group>:<data_id>`",
+				MarkdownDescription: "Resource to bind this permission, in the format of `<namespace_id>:<group>:<data_id>`",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"permission": schema.StringAttribute{
-				MarkdownDescription: "permission to bind this permission, options are `r`, `w`, `rw`",
+			"action": schema.StringAttribute{
+				MarkdownDescription: "Action to bind this permission, choices are `r`, `w`, `rw`",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -109,7 +109,7 @@ func ParesePermissionID(id string) (string, string, string, error) {
 	re := regexp.MustCompile(`^([^:]+):([^:]*:[^:]+:[^:]+):(r|w|rw)$`)
 	matches := re.FindStringSubmatch(id)
 	if matches == nil {
-		return "", "", "", fmt.Errorf("unexpected ID format (%q). expected <role_name>:<resource>:<permission>", id)
+		return "", "", "", fmt.Errorf("unexpected ID format (%q). expected <role_name>:<resource>:<action>", id)
 	}
 	return matches[1], matches[2], matches[3], nil
 }
@@ -125,22 +125,22 @@ func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 	rolename := data.RoleName.ValueString()
 	resource := data.Resource.ValueString()
-	permission := data.Permission.ValueString()
-	id := BuildThreePartID(rolename, resource, permission)
+	action := data.Action.ValueString()
+	id := BuildThreePartID(rolename, resource, action)
 
-	tflog.Debug(ctx, "creating permission", map[string]any{"role_name": rolename, "resource": resource, "permission": permission})
+	tflog.Debug(ctx, "creating permission", map[string]any{"role_name": rolename, "resource": resource, "action": action})
 
-	perm, err := r.client.GetPermission(rolename, resource, permission)
+	perm, err := r.client.GetPermission(rolename, resource, action)
 	if err == nil && perm != nil {
 		resp.Diagnostics.AddError(
 			"Permission already exists",
-			fmt.Sprintf("A permission with role_name=%s,resource=%s,permission=%s already exists. "+
-				"Run `terraform import nacos_permission.example %s` to manage it.", rolename, resource, permission, id),
+			fmt.Sprintf("A permission with role_name=%s,resource=%s,action=%s already exists. "+
+				"Run `terraform import nacos_permission.example %s` to manage it.", rolename, resource, action, id),
 		)
 		return
 	}
 
-	err = r.client.CreatePermission(rolename, resource, permission)
+	err = r.client.CreatePermission(rolename, resource, action)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Create Nacos permission",
@@ -151,7 +151,7 @@ func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequ
 
 	data.ID = types.StringValue(id)
 
-	tflog.Debug(ctx, "created role", map[string]any{"role_name": rolename, "resource": resource, "permission": permission})
+	tflog.Debug(ctx, "created role", map[string]any{"role_name": rolename, "resource": resource, "action": action})
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
@@ -172,7 +172,7 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 	id := data.ID.ValueString()
-	rolename, resource, permission, err := ParesePermissionID(id)
+	rolename, resource, action, err := ParesePermissionID(id)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Parse Nacos permission",
@@ -180,7 +180,7 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 		)
 		return
 	}
-	_, err = r.client.GetPermission(rolename, resource, permission)
+	_, err = r.client.GetPermission(rolename, resource, action)
 	if err != nil {
 		if IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -191,11 +191,11 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 		)
 		return
 	}
-	tflog.Debug(ctx, "found permission", map[string]any{"role_name": rolename, "resource": resource, "permission": permission})
+	tflog.Debug(ctx, "found permission", map[string]any{"role_name": rolename, "resource": resource, "action": action})
 
 	data.RoleName = types.StringValue(rolename)
 	data.Resource = types.StringValue(resource)
-	data.Permission = types.StringValue(permission)
+	data.Action = types.StringValue(action)
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -225,8 +225,8 @@ func (r *PermissionResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 	rolename := data.RoleName.ValueString()
 	resource := data.Resource.ValueString()
-	permission := data.Permission.ValueString()
-	err := r.client.DeletePermission(rolename, resource, permission)
+	action := data.Action.ValueString()
+	err := r.client.DeletePermission(rolename, resource, action)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Create Nacos permission",
@@ -234,7 +234,7 @@ func (r *PermissionResource) Delete(ctx context.Context, req resource.DeleteRequ
 		)
 		return
 	}
-	tflog.Debug(ctx, "deleted permission", map[string]any{"role_name": rolename, "resource": resource, "permission": permission})
+	tflog.Debug(ctx, "deleted permission", map[string]any{"role_name": rolename, "resource": resource, "action": action})
 }
 
 func (r *PermissionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

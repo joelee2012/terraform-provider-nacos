@@ -24,12 +24,12 @@ resource "nacos_role" "example" {
 
 ### Required
 
-- `name` (String) name of role.
-- `username` (String) name of user to bind this role
+- `name` (String) Name of role.
+- `username` (String) Username to bind this role
 
 ### Read-Only
 
-- `id` (String) ID this terraform resource, In the format of `<name>:<username>`.
+- `id` (String) ID this terraform resource, in the format of `<name>:<username>`.
 
 ## Import
 

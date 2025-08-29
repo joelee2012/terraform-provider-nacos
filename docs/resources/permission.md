@@ -14,9 +14,9 @@ Nacos permission resource
 
 ```terraform
 resource "nacos_permission" "example" {
-  role_name  = "some-role-name"
-  resource   = "<namespace>:*:*"
-  permission = "r"
+  role_name = "some-role-name"
+  resource  = "<namespace>:*:*"
+  action    = "r"
 }
 ```
 
@@ -25,13 +25,13 @@ resource "nacos_permission" "example" {
 
 ### Required
 
-- `permission` (String) permission to bind this permission, options are `r`, `w`, `rw`
-- `resource` (String) resource to bind this permission, the form is `<namespace_id>:<group>:<data_id>`
-- `role_name` (String) role name to bind this permission
+- `action` (String) Action to bind this permission, choices are `r`, `w`, `rw`
+- `resource` (String) Resource to bind this permission, in the format of `<namespace_id>:<group>:<data_id>`
+- `role_name` (String) Role name to bind this permission
 
 ### Read-Only
 
-- `id` (String) ID this terraform resource, In the format of `<role_name>:<resource>:<permission>`
+- `id` (String) ID this terraform resource, in the format of `<role_name>:<resource>:<action>`
 
 ## Import
 
@@ -40,5 +40,5 @@ Import is supported using the following syntax:
 The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
-terraform import nacos_permission.example "<role_name>:<resource>:<permission>"
+terraform import nacos_permission.example "<role_name>:<resource>:<action>"
 ```

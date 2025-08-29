@@ -24,8 +24,8 @@ resource "nacos_user" "example" {
 
 ### Required
 
-- `password` (String, Sensitive) passwrod of user.
-- `username` (String) name of user
+- `password` (String, Sensitive) Password of user.
+- `username` (String) Name of user
 
 ### Read-Only
 

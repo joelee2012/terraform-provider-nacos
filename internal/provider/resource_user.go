@@ -58,10 +58,10 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				MarkdownDescription: "name of user",
+				MarkdownDescription: "Name of user",
 			},
 			"password": schema.StringAttribute{
-				MarkdownDescription: "passwrod of user.",
+				MarkdownDescription: "Password of user.",
 				Required:            true,
 				Sensitive:           true,
 				PlanModifiers: []planmodifier.String{

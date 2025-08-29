@@ -1,1 +1,1 @@
-terraform import nacos_permission.example "<role_name>:<resource>:<permission>"
+terraform import nacos_permission.example "<role_name>:<resource>:<action>"
