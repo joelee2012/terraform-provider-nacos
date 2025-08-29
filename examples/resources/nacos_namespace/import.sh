@@ -1,1 +1,1 @@
-terraform import nacos_namespace.test "id-123"
+terraform import nacos_namespace.example "id-123"

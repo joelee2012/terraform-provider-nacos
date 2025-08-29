@@ -14,7 +14,7 @@ Nacos namespace resource
 
 ```terraform
 resource "nacos_namespace" "example" {
-  namespace_id = "some-id"
+  namespace_id = "id-123"
   name         = "some-name"
   description  = "managed by terraform"
 }
@@ -43,5 +43,5 @@ Import is supported using the following syntax:
 The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
-terraform import nacos_namespace.test "id-123"
+terraform import nacos_namespace.example "id-123"
 ```
