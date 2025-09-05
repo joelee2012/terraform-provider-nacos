@@ -87,6 +87,7 @@ jobs:
         uses: docker/setup-compose-action@v1
       - name: Setup Nacos
         run: |
+          #!/bin/bash
           cat >> $GITHUB_ENV <<EOF
           NACOS_HOST=http://127.0.0.1:8848/nacos
           NACOS_USERNAME=nacos
