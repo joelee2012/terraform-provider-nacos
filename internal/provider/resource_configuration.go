@@ -188,7 +188,7 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	getOpts := &nacos.GetCSOpts{
+	getOpts := &nacos.GetCfgOpts{
 		DataID:      data.DataID.ValueString(),
 		Group:       data.Group.ValueString(),
 		NamespaceID: data.NamespaceID.ValueString(),
@@ -209,7 +209,7 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 		)
 		return
 	}
-	opts := &nacos.CreateCSOpts{
+	opts := &nacos.CreateCfgOpts{
 		DataID:      data.DataID.ValueString(),
 		Group:       data.Group.ValueString(),
 		Content:     data.Content.ValueString(),
@@ -265,7 +265,7 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 		)
 		return
 	}
-	config, err := r.client.GetConfig(&nacos.GetCSOpts{
+	config, err := r.client.GetConfig(&nacos.GetCfgOpts{
 		NamespaceID: namespaceId,
 		Group:       group,
 		DataID:      dataId,
@@ -304,7 +304,7 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	opts := &nacos.CreateCSOpts{
+	opts := &nacos.CreateCfgOpts{
 		DataID:      data.DataID.ValueString(),
 		Group:       data.Group.ValueString(),
 		Content:     data.Content.ValueString(),
@@ -330,7 +330,7 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 		)
 		return
 	}
-	config, err := r.client.GetConfig(&nacos.GetCSOpts{
+	config, err := r.client.GetConfig(&nacos.GetCfgOpts{
 		DataID:      data.DataID.ValueString(),
 		Group:       data.Group.ValueString(),
 		NamespaceID: data.NamespaceID.ValueString(),
@@ -366,7 +366,7 @@ func (r *ConfigurationResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	opts := &nacos.DeleteCSOpts{
+	opts := &nacos.DeleteCfgOpts{
 		DataID:      data.DataID.ValueString(),
 		Group:       data.Group.ValueString(),
 		NamespaceID: data.NamespaceID.ValueString(),

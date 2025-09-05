@@ -111,7 +111,7 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	opts := &nacos.CreateNSOpts{
+	opts := &nacos.CreateNsOpts{
 		ID:          data.NamespaceID.ValueString(),
 		Name:        data.Name.ValueString(),
 		Description: data.Description.ValueString(),
@@ -192,7 +192,7 @@ func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	opts := &nacos.CreateNSOpts{
+	opts := &nacos.CreateNsOpts{
 		ID:          data.NamespaceID.ValueString(),
 		Name:        data.Name.ValueString(),
 		Description: data.Description.ValueString(),
