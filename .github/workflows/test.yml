@@ -69,6 +69,7 @@ jobs:
           - "1.13.*"
         nacos:
           - "v2.1.2"
+          - "v2.2.3"
           - "v2.3.2"
           - "v2.4.3"
           - "v2.5.1"
@@ -102,7 +103,7 @@ jobs:
             retries=$((retries-1))
             sleep 5
           done
-          if [ "$NACOS_VERSION" != "v2.1.2" ] && [ "$NACOS_VERSION" != "v2.3.2" ]; then
+          if [[ ! v2.4.2 =~ v2\.[123]\.* ]]; then
             curl -sf -XPOST "${NACOS_HOST}/v1/auth/users/admin" -d "password=$NACOS_PASSWORD"
           fi
         env:
