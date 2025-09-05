@@ -103,7 +103,7 @@ jobs:
             retries=$((retries-1))
             sleep 5
           done
-          if [[ ! v2.4.2 =~ v2\.[123]\.* ]]; then
+          if [[ ! "${NACOS_VERSION}" =~ v2\.[123]\.* ]]; then
             curl -sf -XPOST "${NACOS_HOST}/v1/auth/users/admin" -d "password=$NACOS_PASSWORD"
           fi
         env:
