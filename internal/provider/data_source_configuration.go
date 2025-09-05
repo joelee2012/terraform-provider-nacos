@@ -135,7 +135,7 @@ func (d *ConfigurationDataSource) Read(ctx context.Context, req datasource.ReadR
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	cfg, err := d.client.GetConfig(&nacos.GetCSOpts{DataID: data.DataID.ValueString(), Group: data.Group.ValueString(), NamespaceID: data.NamespaceID.ValueString()})
+	cfg, err := d.client.GetConfig(&nacos.GetCfgOpts{DataID: data.DataID.ValueString(), Group: data.Group.ValueString(), NamespaceID: data.NamespaceID.ValueString()})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Nacos configuration",

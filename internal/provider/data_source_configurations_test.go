@@ -19,7 +19,7 @@ data "nacos_configurations" "test" {
   group  = "test-group"
 }
 `
-	testutil.CreateConfiguration(t, &nacos.CreateCSOpts{NamespaceID: "", DataID: dataId, Group: group, Content: content})
+	testutil.CreateConfiguration(t, &nacos.CreateCfgOpts{NamespaceID: "", DataID: dataId, Group: group, Content: content})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

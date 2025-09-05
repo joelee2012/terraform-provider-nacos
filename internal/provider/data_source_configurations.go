@@ -160,7 +160,7 @@ func (d *ConfigurationsDataSource) Read(ctx context.Context, req datasource.Read
 	} else if data.DataID.IsNull() {
 		allCs, err = d.client.ListConfigInNs(data.NamespaceID.ValueString(), data.Group.ValueString())
 	} else {
-		allCs, err = d.client.ListConfig(&nacos.ListCSOpts{DataID: data.DataID.ValueString(), Group: data.Group.ValueString(), NamespaceID: data.NamespaceID.ValueString()})
+		allCs, err = d.client.ListConfig(&nacos.ListCfgOpts{DataID: data.DataID.ValueString(), Group: data.Group.ValueString(), NamespaceID: data.NamespaceID.ValueString()})
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
