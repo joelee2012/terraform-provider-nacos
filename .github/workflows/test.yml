@@ -87,7 +87,6 @@ jobs:
         uses: docker/setup-compose-action@v1
       - name: Setup Nacos
         run: |
-          #!/bin/bash
           set -x
           cat >> $GITHUB_ENV <<EOF
           NACOS_HOST=http://127.0.0.1:8848/nacos
@@ -103,7 +102,7 @@ jobs:
             retries=$((retries-1))
             sleep 5
           done
-          if [ "$NACOS_VERSION" != "v2.1.2" ] || [ "$NACOS_VERSION" != "v2.3.2" ]; then
+          if [ "$NACOS_VERSION" != "v2.1.2" ] && [ "$NACOS_VERSION" != "v2.3.2" ]; then
             curl -sf -XPOST "${NACOS_HOST}/v1/auth/users/admin" -d "password=$NACOS_PASSWORD"
           fi
         env:
