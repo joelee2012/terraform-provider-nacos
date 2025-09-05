@@ -31,7 +31,7 @@ resource "nacos_permission" "example" {
 
 ### Read-Only
 
-- `id` (String) ID this terraform resource, in the format of `<role_name>:<resource>:<action>`
+- `id` (String) ID of this terraform resource, in the format of `<role_name>:<resource>:<action>`
 
 ## Import
 

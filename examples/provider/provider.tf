@@ -24,3 +24,19 @@ EOF
   tags         = ["terraform"]
   application  = "terraform-nacos"
 }
+
+resource "nacos_user" "test" {
+  username = "user1"
+  password = "abcd2"
+}
+
+resource "nacos_role" "test" {
+  name     = "role1"
+  username = nacos_user.test.username
+}
+
+resource "nacos_permission" "test" {
+  role_name = nacos_role.test.name
+  resource  = "${resource.nacos_namespace.example.namespace_id}:*:*"
+  action    = "r"
+}

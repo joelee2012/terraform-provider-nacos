@@ -9,6 +9,7 @@ services:
       NACOS_AUTH_IDENTITY_KEY: UNFNg7774GvnW9go
       NACOS_AUTH_IDENTITY_VALUE: gjew8AF0BW7qewCK
       NACOS_AUTH_TOKEN: UG9VUXJLZm9McHhVUkVTVG53SVYzaFRCZ21kbVM5Z2IK=
+      JAVA_OPT: -Dnacos.core.api.compatibility.console.enabled=true
     volumes:
       - ./standalone-logs/:/home/nacos/logs
     ports:

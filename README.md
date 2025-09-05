@@ -11,6 +11,11 @@
 - [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0
 - [Go](https://golang.org/doc/install) >= 1.23
 - [Nacos](https://nacos.io/), version must be compatible with [api v1](https://nacos.io/docs/v1/open-api/?spm=5238cd80.2ef5001f.0.0.3f613b7cibLcyN)
+  - v2.1.x
+  - v2.2.x
+  - v2.3.x
+  - v2.4.x
+  - v2.5.x
 
 ## Building The Provider
 
@@ -71,6 +76,7 @@ resource "nacos_user" "test" {
   username = "user1"
   password = "abcd2"
 }
+
 resource "nacos_role" "test" {
   name     = "role1"
   username = nacos_user.test.username
