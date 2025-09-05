@@ -48,7 +48,7 @@ func (r *RoleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				MarkdownDescription: "ID this terraform resource, in the format of `<name>:<username>`.",
+				MarkdownDescription: "ID of this terraform resource, in the format of `<name>:<username>`.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),

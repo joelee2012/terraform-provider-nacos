@@ -29,7 +29,7 @@ resource "nacos_user" "example" {
 
 ### Read-Only
 
-- `id` (String) ID this terraform resource.
+- `id` (String) ID of this terraform resource.
 
 ## Import
 

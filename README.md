@@ -71,6 +71,7 @@ resource "nacos_user" "test" {
   username = "user1"
   password = "abcd2"
 }
+
 resource "nacos_role" "test" {
   name     = "role1"
   username = nacos_user.test.username
