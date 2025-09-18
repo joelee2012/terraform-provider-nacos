@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/joelee2012/go-nacos"
+	"github.com/joelee2012/nacosctl/pkg/nacos"
 )
 
 var client = nacos.NewClient(os.Getenv("NACOS_HOST"), os.Getenv("NACOS_USERNAME"), os.Getenv("NACOS_PASSWORD"))
