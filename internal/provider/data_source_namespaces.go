@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/joelee2012/go-nacos"
+	"github.com/joelee2012/nacosctl/pkg/nacos"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
