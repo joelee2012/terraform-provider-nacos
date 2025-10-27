@@ -48,10 +48,10 @@ type ConfigurationResourceModel struct {
 }
 
 func (c *ConfigurationResourceModel) SetFromConfiguration(ctx context.Context, cfg *nacos.Configuration) diag.Diagnostics {
-	c.ID = types.StringValue(BuildThreePartID(cfg.NamespaceID, cfg.Group, cfg.DataID))
+	c.ID = types.StringValue(BuildThreePartID(cfg.GetNamespace(), cfg.GetGroup(), cfg.DataID))
 	c.DataID = types.StringValue(cfg.DataID)
-	c.Group = types.StringValue(cfg.Group)
-	c.NamespaceID = types.StringValue(cfg.NamespaceID)
+	c.Group = types.StringValue(cfg.GetGroup())
+	c.NamespaceID = types.StringValue(cfg.GetNamespace())
 	c.Application = types.StringValue(cfg.Application)
 	c.Content = types.StringValue(cfg.Content)
 	c.Description = types.StringValue(cfg.Description)

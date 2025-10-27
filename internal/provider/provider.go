@@ -153,7 +153,7 @@ func (p *NacosProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 	// Create a new HashiCups client using the configuration values
 	client := nacos.NewClient(host, username, password)
-
+	client.DetectAPIVersion()
 	// Example client configuration for data sources and resources
 	resp.DataSourceData = client
 	resp.ResourceData = client
