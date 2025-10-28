@@ -73,7 +73,7 @@ jobs:
           - "v2.3.2"
           - "v2.4.3"
           - "v2.5.1"
-          # - "v3.0.2"
+          - "v3.1.0"
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
