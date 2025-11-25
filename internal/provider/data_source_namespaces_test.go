@@ -11,8 +11,12 @@ import (
 
 func TestAccNamespacesDataSource(t *testing.T) {
 	resourceName := "data.nacos_namespaces.all"
+
 	namespaceId := ""
 	name := "public"
+	if testClient.APIVersion == "v3" {
+		namespaceId = "public"
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

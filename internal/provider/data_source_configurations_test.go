@@ -19,8 +19,14 @@ data "nacos_configurations" "test" {
   group  = "test-group"
 }
 `
-	testutil.CreateConfiguration(t, &nacos.CreateCfgOpts{NamespaceID: "", DataID: dataId, Group: group, Content: content})
 
+	expect_id := ""
+	expect_content := content
+	apiVersion := testutil.CreateConfiguration(t, &nacos.CreateCfgOpts{NamespaceID: "", DataID: dataId, Group: group, Content: content})
+	if apiVersion == "v3" {
+		expect_id = "public"
+		expect_content = ""
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -32,12 +38,12 @@ data "nacos_configurations" "test" {
 					statecheck.ExpectKnownValue(
 						resourceName,
 						tfjsonpath.New("items").AtSliceIndex(0).AtMapKey("namespace_id"),
-						knownvalue.StringExact(""),
+						knownvalue.StringExact(expect_id),
 					),
 					statecheck.ExpectKnownValue(
 						resourceName,
 						tfjsonpath.New("items").AtSliceIndex(0).AtMapKey("content"),
-						knownvalue.StringExact(content),
+						knownvalue.StringExact(expect_content),
 					),
 				},
 			},

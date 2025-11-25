@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -13,11 +14,14 @@ func TestAccNamespaceDataSource(t *testing.T) {
 	resourceName := "data.nacos_namespace.public"
 	namespaceId := ""
 	name := "public"
-	config := `
+	if testClient.APIVersion == "v3" {
+		namespaceId = "public"
+	}
+	config := fmt.Sprintf(`
 data "nacos_namespace" "public" {
-	namespace_id = ""
-}
-`
+	namespace_id = "%s"
+}`, namespaceId)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

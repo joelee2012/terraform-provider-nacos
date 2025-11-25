@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/joelee2012/nacosctl/pkg/nacos"
 )
 
 // testAccProtoV6ProviderFactories is used to instantiate a provider during acceptance testing.
@@ -14,6 +15,8 @@ import (
 var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
 	"nacos": providerserver.NewProtocol6WithError(New("test")()),
 }
+
+var testClient = nacos.NewClient(os.Getenv("NACOS_HOST"), os.Getenv("NACOS_USERNAME"), os.Getenv("NACOS_PASSWORD"))
 
 func testAccPreCheck(t *testing.T) {
 	// You can add code here to run prior to any test case execution, for example assertions
@@ -28,4 +31,16 @@ func testAccPreCheck(t *testing.T) {
 	if v := os.Getenv("NACOS_PASSWORD"); v == "" {
 		t.Fatal("NACOS_PASSWORD must be set for acceptance tests")
 	}
+
+}
+
+func CreateTestConfiguration(t *testing.T, opts *nacos.CreateCfgOpts) {
+	if err := testClient.CreateConfig(opts); err != nil {
+		t.Errorf("Error creating %s:%s:%s: %s", opts.NamespaceID, opts.Group, opts.DataID, err.Error())
+	}
+	t.Cleanup(func() {
+		if err := testClient.DeleteConfig(&nacos.DeleteCfgOpts{NamespaceID: opts.NamespaceID, DataID: opts.DataID, Group: opts.Group}); err != nil {
+			t.Errorf("Error deleting %s:%s:%s: %s", opts.NamespaceID, opts.Group, opts.DataID, err.Error())
+		}
+	})
 }

@@ -94,6 +94,9 @@ jobs:
           NACOS_USERNAME=nacos
           NACOS_PASSWORD=nacos
           EOF
+          if [ "${NACOS_VERSION}" =~ "v3.1.0" ]]; then
+            NACOS_HOST=http://127.0.0.1:8080
+          fi
           source $GITHUB_ENV
           docker compose up -d
           retries=100

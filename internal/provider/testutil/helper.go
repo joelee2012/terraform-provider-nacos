@@ -8,8 +8,9 @@ import (
 )
 
 var client = nacos.NewClient(os.Getenv("NACOS_HOST"), os.Getenv("NACOS_USERNAME"), os.Getenv("NACOS_PASSWORD"))
+var apiVersion = "v1"
 
-func CreateConfiguration(t *testing.T, opts *nacos.CreateCfgOpts) {
+func CreateConfiguration(t *testing.T, opts *nacos.CreateCfgOpts) string {
 	if err := client.CreateConfig(opts); err != nil {
 		t.Errorf("Error creating %s:%s:%s: %s", opts.NamespaceID, opts.Group, opts.DataID, err.Error())
 	}
@@ -18,4 +19,6 @@ func CreateConfiguration(t *testing.T, opts *nacos.CreateCfgOpts) {
 			t.Errorf("Error deleting %s:%s:%s: %s", opts.NamespaceID, opts.Group, opts.DataID, err.Error())
 		}
 	})
+	apiVersion = client.APIVersion
+	return client.APIVersion
 }

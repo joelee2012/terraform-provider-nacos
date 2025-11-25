@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/joelee2012/nacosctl/pkg/nacos"
-	"github.com/joelee2012/terraform-provider-nacos/internal/provider/testutil"
 )
 
 func TestAccConfigurationDataSource(t *testing.T) {
@@ -19,8 +18,11 @@ data "nacos_configuration" "test" {
   group  = "test-group"
 }
 `
-
-	testutil.CreateConfiguration(t, &nacos.CreateCfgOpts{NamespaceID: "", DataID: dataId, Group: group, Content: content})
+	expect_id := ""
+	CreateTestConfiguration(t, &nacos.CreateCfgOpts{NamespaceID: "", DataID: dataId, Group: group, Content: content})
+	if testClient.APIVersion == "v3" {
+		expect_id = "public"
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -33,7 +35,7 @@ data "nacos_configuration" "test" {
 					statecheck.ExpectKnownValue(
 						resourceName,
 						tfjsonpath.New("namespace_id"),
-						knownvalue.StringExact(""),
+						knownvalue.StringExact(expect_id),
 					),
 					statecheck.ExpectKnownValue(
 						resourceName,
