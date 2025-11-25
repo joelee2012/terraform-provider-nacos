@@ -34,7 +34,7 @@ func testAccPreCheck(t *testing.T) {
 
 }
 
-func CreateTestConfiguration(t *testing.T, opts *nacos.CreateCfgOpts) {
+func setupTestConfiguration(t *testing.T, opts *nacos.CreateCfgOpts) {
 	if err := testClient.CreateConfig(opts); err != nil {
 		t.Errorf("Error creating %s:%s:%s: %s", opts.NamespaceID, opts.Group, opts.DataID, err.Error())
 	}

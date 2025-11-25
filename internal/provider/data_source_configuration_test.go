@@ -19,7 +19,7 @@ data "nacos_configuration" "test" {
 }
 `
 	expect_id := ""
-	CreateTestConfiguration(t, &nacos.CreateCfgOpts{NamespaceID: "", DataID: dataId, Group: group, Content: content})
+	setupTestConfiguration(t, &nacos.CreateCfgOpts{NamespaceID: "", DataID: dataId, Group: group, Content: content})
 	if testClient.APIVersion == "v3" {
 		expect_id = "public"
 	}

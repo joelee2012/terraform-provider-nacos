@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/joelee2012/nacosctl/pkg/nacos"
-	"github.com/joelee2012/terraform-provider-nacos/internal/provider/testutil"
 )
 
 func TestAccConfigurationsDataSource(t *testing.T) {
@@ -22,8 +21,8 @@ data "nacos_configurations" "test" {
 
 	expect_id := ""
 	expect_content := content
-	apiVersion := testutil.CreateConfiguration(t, &nacos.CreateCfgOpts{NamespaceID: "", DataID: dataId, Group: group, Content: content})
-	if apiVersion == "v3" {
+	setupTestConfiguration(t, &nacos.CreateCfgOpts{NamespaceID: "", DataID: dataId, Group: group, Content: content})
+	if testClient.APIVersion == "v3" {
 		expect_id = "public"
 		expect_content = ""
 	}
