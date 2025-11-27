@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -12,17 +13,25 @@ import (
 
 func TestAccConfigurationDataSource(t *testing.T) {
 	resourceName := "data.nacos_configuration.test"
-	config := `
+	dataId := "test-data-id"
+	group := "test-group"
+	content := `
+server:
+  url: example.com
+  port: 80
+`
+	namespaceId := ""
+	setupTestConfiguration(t, &nacos.CreateCfgOpts{NamespaceID: namespaceId, DataID: dataId, Group: group, Content: content})
+	if testClient.APIVersion == "v3" {
+		namespaceId = "public"
+	}
+	config := fmt.Sprintf(`
 data "nacos_configuration" "test" {
   data_id = "test-data-id"
   group  = "test-group"
+  namespace_id = "%s"
 }
-`
-	expect_id := ""
-	setupTestConfiguration(t, &nacos.CreateCfgOpts{NamespaceID: "", DataID: dataId, Group: group, Content: content})
-	if testClient.APIVersion == "v3" {
-		expect_id = "public"
-	}
+`, namespaceId)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -35,7 +44,7 @@ data "nacos_configuration" "test" {
 					statecheck.ExpectKnownValue(
 						resourceName,
 						tfjsonpath.New("namespace_id"),
-						knownvalue.StringExact(expect_id),
+						knownvalue.StringExact(namespaceId),
 					),
 					statecheck.ExpectKnownValue(
 						resourceName,

@@ -205,7 +205,7 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 		resp.Diagnostics.AddError(
 			"Configuration already exists",
 			fmt.Sprintf("A configuration with namespace_id=%s,group=%s,data_id=%s already exists. "+
-				"Run `terraform import nacos_configuration.example %s` to manage it.", getOpts.NamespaceID, getOpts.Group, getOpts.DataID, id),
+				"Run `terraform import nacos_configuration.example %s` to manage it. %#v.", getOpts.NamespaceID, getOpts.Group, getOpts.DataID, id, config),
 		)
 		return
 	}

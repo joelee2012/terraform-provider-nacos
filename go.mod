@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.28.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-testing v1.13.3
-	github.com/joelee2012/nacosctl v0.1.1-0.20251125125639-48b12c562b2a
+	github.com/joelee2012/nacosctl v0.1.1-0.20251127092420-ed4063878d03
 )
 
 require (

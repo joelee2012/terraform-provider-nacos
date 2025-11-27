@@ -11,19 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
-var (
-	namespaceId        = "test-namespace-id"
-	dataId             = "test-data-id"
-	group              = "test-group"
-	description        = "Test namespace for acceptance testing"
-	updatedDescription = "Test namespace for update testing - updated"
-	content            = `
-server:
-  url: example.com
-  port: 80
-`
-)
-
 func testAccConfigurationSourceConfig(namespaceId, group, dataId, content, description string) string {
 	return fmt.Sprintf(`
 resource "nacos_configuration" "test" {
@@ -41,7 +28,16 @@ EOT
 
 func TestAccConfigurationResource(t *testing.T) {
 	resourceName := "nacos_configuration.test"
-
+	namespaceId := "test-namespace-id"
+	dataId := "test-data-id"
+	group := "test-group"
+	description := "Test namespace for acceptance testing"
+	updatedDescription := "Test namespace for update testing - updated"
+	content := `
+server:
+  url: example.com
+  port: 80
+`
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

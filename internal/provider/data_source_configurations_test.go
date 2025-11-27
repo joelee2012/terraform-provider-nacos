@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -12,20 +13,28 @@ import (
 
 func TestAccConfigurationsDataSource(t *testing.T) {
 	resourceName := "data.nacos_configurations.test"
-	config := `
+	dataId := "test-data-id"
+	group := "test-group"
+	content := `
+server:
+  url: example.com
+  port: 80
+`
+	namespaceId := ""
+	setupTestConfiguration(t, &nacos.CreateCfgOpts{NamespaceID: namespaceId, DataID: dataId, Group: group, Content: content})
+	if testClient.APIVersion == "v3" {
+		namespaceId = "public"
+		content = ""
+	}
+
+	config := fmt.Sprintf(`
 data "nacos_configurations" "test" {
   data_id = "test-data-id"
   group  = "test-group"
+  namespace_id = "%s"
 }
-`
+`, namespaceId)
 
-	expect_id := ""
-	expect_content := content
-	setupTestConfiguration(t, &nacos.CreateCfgOpts{NamespaceID: "", DataID: dataId, Group: group, Content: content})
-	if testClient.APIVersion == "v3" {
-		expect_id = "public"
-		expect_content = ""
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -37,12 +46,12 @@ data "nacos_configurations" "test" {
 					statecheck.ExpectKnownValue(
 						resourceName,
 						tfjsonpath.New("items").AtSliceIndex(0).AtMapKey("namespace_id"),
-						knownvalue.StringExact(expect_id),
+						knownvalue.StringExact(namespaceId),
 					),
 					statecheck.ExpectKnownValue(
 						resourceName,
 						tfjsonpath.New("items").AtSliceIndex(0).AtMapKey("content"),
-						knownvalue.StringExact(expect_content),
+						knownvalue.StringExact(content),
 					),
 				},
 			},
