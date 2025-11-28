@@ -63,10 +63,10 @@ jobs:
       matrix:
         # list whatever Terraform versions here you would like to support
         terraform:
-          # - "1.0.*"
-          # - "1.5.*"
-          # - "1.6.*"
-          - "1.13.*"
+          - "1.0.*"
+          - "1.5.*"
+          - "1.6.*"
+          - "1.14.*"
         nacos:
           - "v2.1.2"
           - "v2.2.3"
@@ -88,7 +88,6 @@ jobs:
         uses: docker/setup-compose-action@v1
       - name: Set up nacos info
         run: |
-          set -x
           if [[ "${NACOS_VERSION}" =~ ^v3 ]]; then
             cat >> $GITHUB_ENV <<EOF
           NACOS_HOST=http://127.0.0.1:8080
@@ -111,7 +110,6 @@ jobs:
 
       - name: Setup Nacos
         run: |
-          set -x
           docker compose up -d
           retries=100
           while [ $retries -gt 0 ]; do
