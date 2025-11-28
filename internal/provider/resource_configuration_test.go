@@ -15,7 +15,7 @@ func testAccConfigurationSourceConfig(namespaceId, group, dataId, content, descr
 	return fmt.Sprintf(`
 resource "nacos_configuration" "test" {
   namespace_id = "%s"
-  group  	   = "%s"
+  group        = "%s"
   data_id      = "%s"
   content      = <<EOT
 %s
@@ -29,15 +29,14 @@ EOT
 func TestAccConfigurationResource(t *testing.T) {
 	resourceName := "nacos_configuration.test"
 	namespaceId := "test-namespace-id"
-	dataId := "test-data-id"
+	dataId := "test-resource-id"
 	group := "test-group"
-	description := "Test namespace for acceptance testing"
-	updatedDescription := "Test namespace for update testing - updated"
-	content := `
-server:
+	description := "Test configuration for acceptance testing"
+	updatedDescription := "Test configuration for update testing - updated"
+	content := `server:
   url: example.com
-  port: 80
-`
+  port: 80`
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
