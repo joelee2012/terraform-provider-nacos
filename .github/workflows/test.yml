@@ -86,20 +86,26 @@ jobs:
           terraform_wrapper: false
       - name: Set up Docker Compose
         uses: docker/setup-compose-action@v1
-      - name: Setup Nacos
+      - name: Set up nacos info
         run: |
-          set -x
-          cat >> $GITHUB_ENV <<EOF
-          NACOS_HOST=http://127.0.0.1:8848/nacos
-          NACOS_STATE="${NACOS_HOST}/v1/console/server/state"
+          if [[ "${NACOS_VERSION}" =~ v3\..*\..* ]]; then
+            cat >> $GITHUB_ENV <<EOF
+          NACOS_HOST=http://127.0.0.1:8080
+          NACOS_STATE="http://127.0.0.1:8080/v3/console/server/state"
           NACOS_USERNAME=nacos
           NACOS_PASSWORD=nacos
           EOF
-          if [[ "${NACOS_VERSION}" =~ v3\..*\..* ]]; then
-            NACOS_HOST=http://127.0.0.1:8080
-            NACOS_STATE="${NACOS_HOST}/v3/console/server/state"
+          else
+            cat >> $GITHUB_ENV <<EOF
+          NACOS_HOST=http://127.0.0.1:8848/nacos
+          NACOS_STATE="http://127.0.0.1:8848/nacos/v1/console/server/state"
+          NACOS_USERNAME=nacos
+          NACOS_PASSWORD=nacos
+          EOF
           fi
-          source $GITHUB_ENV
+
+      - name: Setup Nacos
+        run: |
           docker compose up -d
           retries=100
           while [ $retries -gt 0 ]; do
