@@ -104,6 +104,8 @@ jobs:
           NACOS_PASSWORD=nacos
           EOF
           fi
+        env:
+          NACOS_VERSION: ${{ matrix.nacos }}
 
       - name: Setup Nacos
         run: |
