@@ -265,6 +265,11 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 		)
 		return
 	}
+	tflog.Debug(ctx, "import configuration", map[string]any{
+		"namespace_id": namespaceId,
+		"group":        group,
+		"data_id":      dataId,
+	})
 	config, err := r.client.GetConfig(&nacos.GetCfgOpts{
 		NamespaceID: namespaceId,
 		Group:       group,
@@ -277,6 +282,14 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 		resp.Diagnostics.AddError(
 			"Unable to Read Nacos configuration",
 			err.Error(),
+		)
+		return
+	}
+
+	if config == nil {
+		resp.Diagnostics.AddError(
+			"No such Nacos configuration",
+			data.ID.ValueString(),
 		)
 		return
 	}
