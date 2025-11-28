@@ -91,23 +91,25 @@ jobs:
           set -x
           cat >> $GITHUB_ENV <<EOF
           NACOS_HOST=http://127.0.0.1:8848/nacos
+          NACOS_STATE="${NACOS_HOST}/v1/console/server/state"
           NACOS_USERNAME=nacos
           NACOS_PASSWORD=nacos
           EOF
-          if [ "${NACOS_VERSION}" =~ "v3.1.0" ]]; then
+          if [[ "${NACOS_VERSION}" =~ v3\..*\..* ]]; then
             NACOS_HOST=http://127.0.0.1:8080
+            NACOS_STATE="${NACOS_HOST}/v3/console/server/state"
           fi
           source $GITHUB_ENV
           docker compose up -d
           retries=100
           while [ $retries -gt 0 ]; do
-            curl -sf "${NACOS_HOST}/v1/console/server/state" && break
+            curl -sf "${NACOS_STATE}" && break
             echo "Waiting for Nacos to be ready..."
             retries=$((retries-1))
             sleep 5
           done
-          if [[ ! "${NACOS_VERSION}" =~ v2\.[123]\.* ]]; then
-            curl -sf -XPOST "${NACOS_HOST}/v1/auth/users/admin" -d "password=$NACOS_PASSWORD"
+          if [[ "${NACOS_VERSION}" =~ v3\..*\..* ]]; then
+            curl -sf -XPOST "${NACOS_HOST}/v3/auth/user/admin" -d "password=$NACOS_PASSWORD"
           fi
         env:
           NACOS_VERSION: ${{ matrix.nacos }}
