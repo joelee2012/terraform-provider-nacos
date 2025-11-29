@@ -66,14 +66,14 @@ jobs:
           - "1.0.*"
           - "1.5.*"
           - "1.6.*"
-          - "1.13.*"
+          - "1.14.*"
         nacos:
           - "v2.1.2"
           - "v2.2.3"
           - "v2.3.2"
           - "v2.4.3"
           - "v2.5.1"
-          # - "v3.0.2"
+          - "v3.1.0"
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
@@ -86,25 +86,40 @@ jobs:
           terraform_wrapper: false
       - name: Set up Docker Compose
         uses: docker/setup-compose-action@v1
-      - name: Setup Nacos
+      - name: Set up nacos info
         run: |
-          set -x
-          cat >> $GITHUB_ENV <<EOF
-          NACOS_HOST=http://127.0.0.1:8848/nacos
+          if [[ "${NACOS_VERSION}" =~ ^v3 ]]; then
+            cat >> $GITHUB_ENV <<EOF
+          NACOS_HOST=http://127.0.0.1:8080
+          NACOS_STATE=http://127.0.0.1:8080/v3/console/server/state
+          NACOS_AUTH_URL=http://127.0.0.1:8080/v3/auth/user/admin
           NACOS_USERNAME=nacos
           NACOS_PASSWORD=nacos
           EOF
-          source $GITHUB_ENV
+          else
+            cat >> $GITHUB_ENV <<EOF
+          NACOS_HOST=http://127.0.0.1:8848/nacos
+          NACOS_STATE=http://127.0.0.1:8848/nacos/v1/console/server/state
+          NACOS_AUTH_URL=http://127.0.0.1:8848/nacos/v1/auth/users/admin
+          NACOS_USERNAME=nacos
+          NACOS_PASSWORD=nacos
+          EOF
+          fi
+        env:
+          NACOS_VERSION: ${{ matrix.nacos }}
+
+      - name: Setup Nacos
+        run: |
           docker compose up -d
           retries=100
           while [ $retries -gt 0 ]; do
-            curl -sf "${NACOS_HOST}/v1/console/server/state" && break
+            curl -sf "${NACOS_STATE}" && break
             echo "Waiting for Nacos to be ready..."
             retries=$((retries-1))
-            sleep 5
+            sleep 1
           done
-          if [[ ! "${NACOS_VERSION}" =~ v2\.[123]\.* ]]; then
-            curl -sf -XPOST "${NACOS_HOST}/v1/auth/users/admin" -d "password=$NACOS_PASSWORD"
+          if [[ ! "${NACOS_VERSION}" =~ ^v2\.[123]\.* ]]; then
+            curl -sf -XPOST "${NACOS_AUTH_URL}" -d "password=$NACOS_PASSWORD"
           fi
         env:
           NACOS_VERSION: ${{ matrix.nacos }}

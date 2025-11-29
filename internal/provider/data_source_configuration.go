@@ -118,7 +118,7 @@ func (d *ConfigurationDataSource) Configure(ctx context.Context, req datasource.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *nacos.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 
 		return
@@ -147,9 +147,9 @@ func (d *ConfigurationDataSource) Read(ctx context.Context, req datasource.ReadR
 	data = ConfigurationDataSourceModel{
 		ID:               types.StringValue(BuildThreePartID(cfg.NamespaceID, cfg.Group, cfg.DataID)),
 		DataID:           types.StringValue(cfg.DataID),
-		Group:            types.StringValue(cfg.Group),
+		Group:            types.StringValue(cfg.GetGroup()),
 		Content:          types.StringValue(cfg.Content),
-		NamespaceID:      types.StringValue(cfg.NamespaceID),
+		NamespaceID:      types.StringValue(cfg.GetNamespace()),
 		Type:             types.StringValue(cfg.Type),
 		Md5:              types.StringValue(cfg.Md5),
 		EncryptedDataKey: types.StringValue(cfg.EncryptedDataKey),

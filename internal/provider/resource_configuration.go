@@ -48,10 +48,10 @@ type ConfigurationResourceModel struct {
 }
 
 func (c *ConfigurationResourceModel) SetFromConfiguration(ctx context.Context, cfg *nacos.Configuration) diag.Diagnostics {
-	c.ID = types.StringValue(BuildThreePartID(cfg.NamespaceID, cfg.Group, cfg.DataID))
+	c.ID = types.StringValue(BuildThreePartID(cfg.GetNamespace(), cfg.GetGroup(), cfg.DataID))
 	c.DataID = types.StringValue(cfg.DataID)
-	c.Group = types.StringValue(cfg.Group)
-	c.NamespaceID = types.StringValue(cfg.NamespaceID)
+	c.Group = types.StringValue(cfg.GetGroup())
+	c.NamespaceID = types.StringValue(cfg.GetNamespace())
 	c.Application = types.StringValue(cfg.Application)
 	c.Content = types.StringValue(cfg.Content)
 	c.Description = types.StringValue(cfg.Description)
@@ -170,7 +170,7 @@ func (r *ConfigurationResource) Configure(ctx context.Context, req resource.Conf
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *nacos.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 
 		return
@@ -265,6 +265,11 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 		)
 		return
 	}
+	tflog.Debug(ctx, "import configuration", map[string]any{
+		"namespace_id": namespaceId,
+		"group":        group,
+		"data_id":      dataId,
+	})
 	config, err := r.client.GetConfig(&nacos.GetCfgOpts{
 		NamespaceID: namespaceId,
 		Group:       group,
@@ -277,6 +282,14 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 		resp.Diagnostics.AddError(
 			"Unable to Read Nacos configuration",
 			err.Error(),
+		)
+		return
+	}
+
+	if config == nil {
+		resp.Diagnostics.AddError(
+			"No such Nacos configuration",
+			data.ID.ValueString(),
 		)
 		return
 	}
