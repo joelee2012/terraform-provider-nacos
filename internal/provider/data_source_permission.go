@@ -97,8 +97,8 @@ func (r *PermissionDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	tflog.Debug(ctx, "reading permission", map[string]any{
 		"role_name": roleName,
-		"resource": resource, 
-		"action": action,
+		"resource":  resource,
+		"action":    action,
 	})
 
 	_, err := r.client.GetPermission(roleName, resource, action)
