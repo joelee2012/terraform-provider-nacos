@@ -6,6 +6,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/joelee2012/nacosctl/pkg/nacos"
@@ -56,6 +58,9 @@ func (r *PermissionDataSource) Schema(ctx context.Context, req datasource.Schema
 			"action": schema.StringAttribute{
 				MarkdownDescription: "Action to query (r, w, rw)",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("r", "w", "rw"),
+				},
 			},
 		},
 	}
