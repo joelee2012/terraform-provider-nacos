@@ -174,6 +174,9 @@ func (p *NacosProvider) DataSources(ctx context.Context) []func() datasource.Dat
 		NewNamespacesDataSource,
 		NewConfigurationDataSource,
 		NewConfigurationsDataSource,
+		NewUserDataSource,
+		NewRoleDataSource,
+		NewPermissionDataSource,
 	}
 }
 
