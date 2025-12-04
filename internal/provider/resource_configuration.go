@@ -237,6 +237,13 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 	data.ID = types.StringValue(id)
+	data.DataID = types.StringValue(opts.DataID)
+	data.Group = types.StringValue(opts.Group)
+	data.NamespaceID = types.StringValue(opts.NamespaceID)
+	data.Content = types.StringValue(opts.Content)
+	data.Type = types.StringValue(opts.Type)
+	data.Application = types.StringValue(opts.Application)
+	data.Description = types.StringValue(opts.Description)
 
 	tflog.Debug(ctx, "created configuration", map[string]any{
 		"namespace_id": getOpts.NamespaceID,
@@ -245,6 +252,12 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 	})
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
+	// Set data returned by API in identity
+	identity := ConfigurationResourceIdentityModel{
+		ID: types.StringValue(id),
+	}
+	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -298,6 +311,10 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	id := BuildThreePartID(namespaceId, group, dataId)
+	data.ID = types.StringValue(id)
+
 	tflog.Debug(ctx, "found configuration", map[string]any{
 		"namespace_id": namespaceId,
 		"group":        group,
@@ -305,6 +322,12 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 	})
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
+	// Set data returned by API in identity
+	identity := ConfigurationResourceIdentityModel{
+		ID: types.StringValue(id),
+	}
+	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -360,6 +383,9 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
+	id := BuildThreePartID(opts.NamespaceID, opts.Group, opts.DataID)
+	data.ID = types.StringValue(id)
+
 	tflog.Debug(ctx, "updated configuration", map[string]any{
 		"namespace_id": opts.NamespaceID,
 		"group":        opts.Group,
@@ -367,6 +393,12 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 	})
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
+	// Set data returned by API in identity
+	identity := ConfigurationResourceIdentityModel{
+		ID: types.StringValue(id),
+	}
+	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *ConfigurationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
