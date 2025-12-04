@@ -138,16 +138,18 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	data.ID = data.NamespaceID
+	data.Name = types.StringValue(opts.Name)
+	data.Description = types.StringValue(opts.Description)
 
 	tflog.Debug(ctx, "created namespace", map[string]any{"id": data.NamespaceID.ValueString()})
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 	// Set data returned by API in identity
-	// identity := NamespaceResourceIdentityModel{
-	// 	ID: types.StringValue(opts.ID),
-	// }
-	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
+	identity := NamespaceResourceIdentityModel{
+		ID: types.StringValue(opts.ID),
+	}
+	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func IsNotFoundError(err error) bool {
@@ -180,6 +182,12 @@ func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
+	// Set data returned by API in identity
+	identity := NamespaceResourceIdentityModel{
+		ID: types.StringValue(ns.ID),
+	}
+	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -210,6 +218,12 @@ func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateReque
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
+	// Set data returned by API in identity
+	identity := NamespaceResourceIdentityModel{
+		ID: types.StringValue(opts.ID),
+	}
+	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *NamespaceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

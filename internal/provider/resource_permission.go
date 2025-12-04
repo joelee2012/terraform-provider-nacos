@@ -150,16 +150,19 @@ func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	data.ID = types.StringValue(id)
+	data.RoleName = types.StringValue(rolename)
+	data.Resource = types.StringValue(resource)
+	data.Action = types.StringValue(action)
 
-	tflog.Debug(ctx, "created role", map[string]any{"role_name": rolename, "resource": resource, "action": action})
+	tflog.Debug(ctx, "created permission", map[string]any{"role_name": rolename, "resource": resource, "action": action})
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 	// Set data returned by API in identity
-	// identity := PermissionResourceIdentityModel{
-	// 	ID: types.StringValue(opts.ID),
-	// }
-	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
+	identity := PermissionResourceIdentityModel{
+		ID: types.StringValue(id),
+	}
+	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -196,12 +199,20 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 	data.RoleName = types.StringValue(rolename)
 	data.Resource = types.StringValue(resource)
 	data.Action = types.StringValue(action)
+	data.ID = types.StringValue(id)
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
+	// Set data returned by API in identity
+	identity := PermissionResourceIdentityModel{
+		ID: types.StringValue(id),
+	}
+	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *PermissionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data UserResourceModel
+	var data PermissionResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)

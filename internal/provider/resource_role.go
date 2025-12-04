@@ -138,16 +138,18 @@ func (r *RoleResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	data.ID = types.StringValue(id)
+	data.Name = types.StringValue(name)
+	data.Username = types.StringValue(username)
 
 	tflog.Debug(ctx, "created role", map[string]any{"name": name, "username": username})
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 	// Set data returned by API in identity
-	// identity := RoleResourceIdentityModel{
-	// 	ID: types.StringValue(opts.ID),
-	// }
-	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
+	identity := RoleResourceIdentityModel{
+		ID: types.StringValue(id),
+	}
+	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *RoleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -182,12 +184,20 @@ func (r *RoleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	tflog.Debug(ctx, "found role", map[string]any{"name": name, "username": username})
 	data.Name = types.StringValue(role.Name)
 	data.Username = types.StringValue(role.Username)
+	data.ID = types.StringValue(BuildRoleID(role.Name, role.Username))
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
+	// Set data returned by API in identity
+	identity := RoleResourceIdentityModel{
+		ID: types.StringValue(BuildRoleID(role.Name, role.Username)),
+	}
+	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *RoleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data UserResourceModel
+	var data RoleResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)

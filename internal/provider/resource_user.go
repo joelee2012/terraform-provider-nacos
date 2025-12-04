@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
+
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -18,7 +18,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &UserResource{}
 var _ resource.ResourceWithImportState = &UserResource{}
-var _ resource.ResourceWithIdentity = &UserResource{}
 
 func NewUserResource() resource.Resource {
 	return &UserResource{}
@@ -124,16 +123,15 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
+	// Set ID before saving state - this is crucial for proper identity handling
 	data.ID = data.Username
 	tflog.Debug(ctx, "created user", map[string]any{"id": username})
+
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-
-	// Set data returned by API in identity
-	// identity := UserResourceIdentityModel{
-	// 	ID: types.StringValue(opts.ID),
-	// }
-	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -163,8 +161,13 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	data.Username = types.StringValue(user.Name)
 	data.ID = data.Username
 	// data.Password = types.StringNull()
+
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	diags := resp.State.Set(ctx, &data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -204,19 +207,4 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 func (r *UserResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-// Struct model for identity data handling.
-type UserResourceIdentityModel struct {
-	ID types.String `tfsdk:"id"`
-}
-
-func (r *UserResource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
-	resp.IdentitySchema = identityschema.Schema{
-		Attributes: map[string]identityschema.Attribute{
-			"id": identityschema.StringAttribute{
-				RequiredForImport: true, // must be set during import by the practitioner
-			},
-		},
-	}
 }

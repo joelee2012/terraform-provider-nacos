@@ -115,12 +115,23 @@ func (r *PermissionDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	data.ID = types.StringValue(fmt.Sprintf("%s:%s:%s", roleName, resource, action))
+	// Construct the ID before setting it to ensure consistency
+	id := fmt.Sprintf("%s:%s:%s", roleName, resource, action)
+	data.ID = types.StringValue(id)
 	data.RoleName = types.StringValue(roleName)
 	data.Resource = types.StringValue(resource)
 	data.Action = types.StringValue(action)
 
-	tflog.Debug(ctx, "found permission", map[string]any{"id": data.ID.ValueString()})
+	tflog.Debug(ctx, "found permission", map[string]any{"id": id})
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
+	// Ensure the ID is properly set in the state
+	if data.ID.ValueString() != id {
+		resp.Diagnostics.AddError(
+			"Inconsistent ID after read",
+			fmt.Sprintf("Expected ID '%s' but got '%s'", id, data.ID.ValueString()),
+		)
+		return
+	}
 }
