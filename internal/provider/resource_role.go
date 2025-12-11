@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -19,7 +18,8 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &RoleResource{}
 var _ resource.ResourceWithImportState = &RoleResource{}
-var _ resource.ResourceWithIdentity = &RoleResource{}
+
+// var _ resource.ResourceWithIdentity = &RoleResource{}
 
 func NewRoleResource() resource.Resource {
 	return &RoleResource{}
@@ -146,10 +146,10 @@ func (r *RoleResource) Create(ctx context.Context, req resource.CreateRequest, r
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 	// Set data returned by API in identity
-	identity := RoleResourceIdentityModel{
-		ID: types.StringValue(id),
-	}
-	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
+	// identity := RoleResourceIdentityModel{
+	// 	ID: types.StringValue(id),
+	// }
+	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *RoleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -244,12 +244,12 @@ type RoleResourceIdentityModel struct {
 	ID types.String `tfsdk:"id"`
 }
 
-func (r *RoleResource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
-	resp.IdentitySchema = identityschema.Schema{
-		Attributes: map[string]identityschema.Attribute{
-			"id": identityschema.StringAttribute{
-				RequiredForImport: true, // must be set during import by the practitioner
-			},
-		},
-	}
-}
+// func (r *RoleResource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+// 	resp.IdentitySchema = identityschema.Schema{
+// 		Attributes: map[string]identityschema.Attribute{
+// 			"id": identityschema.StringAttribute{
+// 				RequiredForImport: true, // must be set during import by the practitioner
+// 			},
+// 		},
+// 	}
+// }

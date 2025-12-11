@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -23,7 +22,8 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &ConfigurationResource{}
 var _ resource.ResourceWithImportState = &ConfigurationResource{}
-var _ resource.ResourceWithIdentity = &ConfigurationResource{}
+
+// var _ resource.ResourceWithIdentity = &ConfigurationResource{}
 
 func NewConfigurationResource() resource.Resource {
 	return &ConfigurationResource{}
@@ -254,10 +254,10 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 	// Set data returned by API in identity
-	identity := ConfigurationResourceIdentityModel{
-		ID: types.StringValue(id),
-	}
-	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
+	// identity := ConfigurationResourceIdentityModel{
+	// 	ID: types.StringValue(id),
+	// }
+	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -299,7 +299,7 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 		if IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
 			// Clear any identity data
-			resp.Diagnostics.Append(resp.Identity.Set(ctx, &ConfigurationResourceIdentityModel{})...)
+			// resp.Diagnostics.Append(resp.Identity.Set(ctx, &ConfigurationResourceIdentityModel{})...)
 			return
 		} else {
 			resp.Diagnostics.AddError(
@@ -313,7 +313,7 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 	if config == nil {
 		resp.State.RemoveResource(ctx)
 		// Clear any identity data
-		resp.Diagnostics.Append(resp.Identity.Set(ctx, &ConfigurationResourceIdentityModel{})...)
+		// resp.Diagnostics.Append(resp.Identity.Set(ctx, &ConfigurationResourceIdentityModel{})...)
 		return
 	}
 
@@ -404,10 +404,10 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 	// Set data returned by API in identity
-	identity := ConfigurationResourceIdentityModel{
-		ID: types.StringValue(id),
-	}
-	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
+	// identity := ConfigurationResourceIdentityModel{
+	// 	ID: types.StringValue(id),
+	// }
+	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *ConfigurationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -444,15 +444,15 @@ type ConfigurationResourceIdentityModel struct {
 	ID types.String `tfsdk:"id"`
 }
 
-func (r *ConfigurationResource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
-	resp.IdentitySchema = identityschema.Schema{
-		Attributes: map[string]identityschema.Attribute{
-			"id": identityschema.StringAttribute{
-				RequiredForImport: true, // must be set during import by the practitioner
-			},
-		},
-	}
-}
+// func (r *ConfigurationResource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+// 	resp.IdentitySchema = identityschema.Schema{
+// 		Attributes: map[string]identityschema.Attribute{
+// 			"id": identityschema.StringAttribute{
+// 				RequiredForImport: true, // must be set during import by the practitioner
+// 			},
+// 		},
+// 	}
+// }
 
 func BuildThreePartID(namespaceID, group, dataID string) string {
 	return fmt.Sprintf("%s:%s:%s", namespaceID, group, dataID)

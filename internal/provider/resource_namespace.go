@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -19,7 +18,8 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &NamespaceResource{}
 var _ resource.ResourceWithImportState = &NamespaceResource{}
-var _ resource.ResourceWithIdentity = &NamespaceResource{}
+
+// var _ resource.ResourceWithIdentity = &NamespaceResource{}
 
 func NewNamespaceResource() resource.Resource {
 	return &NamespaceResource{}
@@ -146,10 +146,10 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 	// Set data returned by API in identity
-	identity := NamespaceResourceIdentityModel{
-		ID: types.StringValue(opts.ID),
-	}
-	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
+	// identity := NamespaceResourceIdentityModel{
+	// 	ID: types.StringValue(opts.ID),
+	// }
+	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func IsNotFoundError(err error) bool {
@@ -221,10 +221,10 @@ func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 	// Set data returned by API in identity
-	identity := NamespaceResourceIdentityModel{
-		ID: types.StringValue(opts.ID),
-	}
-	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
+	// identity := NamespaceResourceIdentityModel{
+	// 	ID: types.StringValue(opts.ID),
+	// }
+	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *NamespaceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -257,12 +257,12 @@ type NamespaceResourceIdentityModel struct {
 	ID types.String `tfsdk:"namespace_id"`
 }
 
-func (r *NamespaceResource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
-	resp.IdentitySchema = identityschema.Schema{
-		Attributes: map[string]identityschema.Attribute{
-			"namespace_id": identityschema.StringAttribute{
-				RequiredForImport: true, // must be set during import by the practitioner
-			},
-		},
-	}
-}
+// func (r *NamespaceResource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+// 	resp.IdentitySchema = identityschema.Schema{
+// 		Attributes: map[string]identityschema.Attribute{
+// 			"namespace_id": identityschema.StringAttribute{
+// 				RequiredForImport: true, // must be set during import by the practitioner
+// 			},
+// 		},
+// 	}
+// }
