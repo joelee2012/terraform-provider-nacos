@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -21,7 +20,8 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &PermissionResource{}
 var _ resource.ResourceWithImportState = &PermissionResource{}
-var _ resource.ResourceWithIdentity = &PermissionResource{}
+
+// var _ resource.ResourceWithIdentity = &PermissionResource{}
 
 func NewPermissionResource() resource.Resource {
 	return &PermissionResource{}
@@ -159,10 +159,10 @@ func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 	// Set data returned by API in identity
-	identity := PermissionResourceIdentityModel{
-		ID: types.StringValue(id),
-	}
-	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
+	// identity := PermissionResourceIdentityModel{
+	// 	ID: types.StringValue(id),
+	// }
+	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -187,11 +187,12 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 	if err != nil {
 		if IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to Read Nacos permission",
+				err.Error(),
+			)
 		}
-		resp.Diagnostics.AddError(
-			"Unable to Read Nacos permission",
-			err.Error(),
-		)
 		return
 	}
 	tflog.Debug(ctx, "found permission", map[string]any{"role_name": rolename, "resource": resource, "action": action})
@@ -205,10 +206,10 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 	// Set data returned by API in identity
-	identity := PermissionResourceIdentityModel{
-		ID: types.StringValue(id),
-	}
-	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
+	// identity := PermissionResourceIdentityModel{
+	// 	ID: types.StringValue(id),
+	// }
+	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *PermissionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -257,12 +258,12 @@ type PermissionResourceIdentityModel struct {
 	ID types.String `tfsdk:"id"`
 }
 
-func (r *PermissionResource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
-	resp.IdentitySchema = identityschema.Schema{
-		Attributes: map[string]identityschema.Attribute{
-			"id": identityschema.StringAttribute{
-				RequiredForImport: true, // must be set during import by the practitioner
-			},
-		},
-	}
-}
+// func (r *PermissionResource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+// 	resp.IdentitySchema = identityschema.Schema{
+// 		Attributes: map[string]identityschema.Attribute{
+// 			"id": identityschema.StringAttribute{
+// 				RequiredForImport: true, // must be set during import by the practitioner
+// 			},
+// 		},
+// 	}
+// }
