@@ -283,6 +283,13 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 		"group":        group,
 		"data_id":      dataId,
 	})
+	// Set data returned by API in identity
+	var identity ConfigurationResourceIdentityModel
+	resp.Diagnostics.Append(req.Identity.Get(ctx, &identity)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	config, err := r.client.GetConfig(&nacos.GetCfgOpts{
 		NamespaceID: namespaceId,
 		Group:       group,
@@ -291,19 +298,22 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 	if err != nil {
 		if IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
+			// Clear any identity data
+			resp.Diagnostics.Append(resp.Identity.Set(ctx, &ConfigurationResourceIdentityModel{})...)
+			return
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to Read Nacos configuration",
+				err.Error(),
+			)
+			return
 		}
-		resp.Diagnostics.AddError(
-			"Unable to Read Nacos configuration",
-			err.Error(),
-		)
-		return
 	}
 
 	if config == nil {
-		resp.Diagnostics.AddError(
-			"No such Nacos configuration",
-			data.ID.ValueString(),
-		)
+		resp.State.RemoveResource(ctx)
+		// Clear any identity data
+		resp.Diagnostics.Append(resp.Identity.Set(ctx, &ConfigurationResourceIdentityModel{})...)
 		return
 	}
 
@@ -322,11 +332,10 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 	})
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-
 	// Set data returned by API in identity
-	identity := ConfigurationResourceIdentityModel{
-		ID: types.StringValue(id),
-	}
+	// identity := ConfigurationResourceIdentityModel{
+	// 	ID: types.StringValue(id),
+	// }
 	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
