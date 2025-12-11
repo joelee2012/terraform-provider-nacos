@@ -149,11 +149,12 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	if err != nil {
 		if IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to Read Nacos user",
+				err.Error(),
+			)
 		}
-		resp.Diagnostics.AddError(
-			"Unable to Read Nacos user",
-			err.Error(),
-		)
 		return
 	}
 	tflog.Debug(ctx, "found user", map[string]any{"username": user.Name})

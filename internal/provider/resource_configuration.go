@@ -284,11 +284,11 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 		"data_id":      dataId,
 	})
 	// Set data returned by API in identity
-	var identity ConfigurationResourceIdentityModel
-	resp.Diagnostics.Append(req.Identity.Get(ctx, &identity)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// var identity ConfigurationResourceIdentityModel
+	// resp.Diagnostics.Append(req.Identity.Get(ctx, &identity)...)
+	// if resp.Diagnostics.HasError() {
+	// 	return
+	// }
 
 	config, err := r.client.GetConfig(&nacos.GetCfgOpts{
 		NamespaceID: namespaceId,
@@ -336,7 +336,7 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 	// identity := ConfigurationResourceIdentityModel{
 	// 	ID: types.StringValue(id),
 	// }
-	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
+	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

@@ -174,11 +174,12 @@ func (r *RoleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	if err != nil {
 		if IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to Read Nacos role",
+				err.Error(),
+			)
 		}
-		resp.Diagnostics.AddError(
-			"Unable to Read Nacos role",
-			err.Error(),
-		)
 		return
 	}
 	tflog.Debug(ctx, "found role", map[string]any{"name": name, "username": username})
@@ -190,10 +191,10 @@ func (r *RoleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 	// Set data returned by API in identity
-	identity := RoleResourceIdentityModel{
-		ID: types.StringValue(BuildRoleID(role.Name, role.Username)),
-	}
-	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
+	// identity := RoleResourceIdentityModel{
+	// 	ID: types.StringValue(BuildRoleID(role.Name, role.Username)),
+	// }
+	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *RoleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

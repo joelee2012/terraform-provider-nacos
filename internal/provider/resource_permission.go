@@ -187,11 +187,12 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 	if err != nil {
 		if IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to Read Nacos permission",
+				err.Error(),
+			)
 		}
-		resp.Diagnostics.AddError(
-			"Unable to Read Nacos permission",
-			err.Error(),
-		)
 		return
 	}
 	tflog.Debug(ctx, "found permission", map[string]any{"role_name": rolename, "resource": resource, "action": action})
@@ -205,10 +206,10 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 	// Set data returned by API in identity
-	identity := PermissionResourceIdentityModel{
-		ID: types.StringValue(id),
-	}
-	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
+	// identity := PermissionResourceIdentityModel{
+	// 	ID: types.StringValue(id),
+	// }
+	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *PermissionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

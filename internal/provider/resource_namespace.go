@@ -170,11 +170,12 @@ func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 	if err != nil {
 		if IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to Read Nacos namespaces",
+				err.Error(),
+			)
 		}
-		resp.Diagnostics.AddError(
-			"Unable to Read Nacos namespaces",
-			err.Error(),
-		)
 		return
 	}
 	tflog.Debug(ctx, "found namespace", map[string]any{"id": data.ID.ValueString()})
@@ -184,10 +185,10 @@ func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 	// Set data returned by API in identity
-	identity := NamespaceResourceIdentityModel{
-		ID: types.StringValue(ns.ID),
-	}
-	resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
+	// identity := NamespaceResourceIdentityModel{
+	// 	ID: types.StringValue(ns.ID),
+	// }
+	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
