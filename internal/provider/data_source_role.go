@@ -99,11 +99,10 @@ func (r *RoleDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	data.ID = types.StringValue(fmt.Sprintf("%s:%s", role.Name, role.Username))
+	data.ID = types.StringValue(BuildRoleID(role.Name, role.Username))
 	data.Name = types.StringValue(role.Name)
 	data.Username = types.StringValue(role.Username)
 
-	tflog.Debug(ctx, "found role", map[string]any{"name": name, "username": username})
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
