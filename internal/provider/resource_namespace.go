@@ -131,7 +131,7 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 	err = r.client.CreateNamespace(opts)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Create Nacos namespaces",
+			"Unable to create namespace",
 			err.Error(),
 		)
 		return
@@ -172,7 +172,7 @@ func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 			resp.State.RemoveResource(ctx)
 		} else {
 			resp.Diagnostics.AddError(
-				"Unable to Read Nacos namespaces",
+				"Unable to read namespace",
 				err.Error(),
 			)
 		}
@@ -209,7 +209,7 @@ func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateReque
 	err := r.client.UpdateNamespace(opts)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Create Nacos namespaces",
+			"Unable to update namespace",
 			err.Error(),
 		)
 		return
@@ -240,7 +240,7 @@ func (r *NamespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 	err := r.client.DeleteNamespace(data.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Create Nacos namespaces",
+			"Unable to delete namespace",
 			err.Error(),
 		)
 		return
