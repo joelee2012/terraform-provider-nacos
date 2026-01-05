@@ -107,7 +107,7 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 	ns, err := d.client.GetNamespace(data.NamespaceId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read Nacos namespaces",
+			"Unable to read namespace",
 			err.Error(),
 		)
 		return

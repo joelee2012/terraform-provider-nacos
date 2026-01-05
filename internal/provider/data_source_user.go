@@ -87,7 +87,7 @@ func (r *UserDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	user, err := r.client.GetUser(username)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read Nacos user",
+			"Unable to read user",
 			err.Error(),
 		)
 		return

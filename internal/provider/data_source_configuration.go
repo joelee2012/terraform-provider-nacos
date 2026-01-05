@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/joelee2012/nacosctl/pkg/nacos"
 )
 
@@ -138,7 +137,7 @@ func (d *ConfigurationDataSource) Read(ctx context.Context, req datasource.ReadR
 	cfg, err := d.client.GetConfig(&nacos.GetCfgOpts{DataID: data.DataID.ValueString(), Group: data.Group.ValueString(), NamespaceID: data.NamespaceID.ValueString()})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read Nacos configuration",
+			"Unable to read configuration",
 			err.Error(),
 		)
 		return
@@ -168,9 +167,6 @@ func (d *ConfigurationDataSource) Read(ctx context.Context, req datasource.ReadR
 	} else {
 		data.Tags = types.SetNull(types.StringType)
 	}
-	// Write logs using the tflog package
-	// Documentation: https://terraform.io/plugin/log
-	tflog.Trace(ctx, "read a data source")
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

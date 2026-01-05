@@ -93,7 +93,7 @@ func (r *RoleDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	role, err := r.client.GetRole(name, username)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read Nacos role",
+			"Unable to read role",
 			err.Error(),
 		)
 		return

@@ -143,7 +143,7 @@ func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequ
 	err = r.client.CreatePermission(rolename, resource, action)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Create Nacos permission",
+			"Unable to create permission",
 			err.Error(),
 		)
 		return
@@ -178,7 +178,7 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 	rolename, resource, action, err := ParesePermissionID(id)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Parse Nacos permission",
+			"Unable to parse permission id",
 			err.Error(),
 		)
 		return
@@ -189,7 +189,7 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 			resp.State.RemoveResource(ctx)
 		} else {
 			resp.Diagnostics.AddError(
-				"Unable to Read Nacos permission",
+				"Unable to read permission",
 				err.Error(),
 			)
 		}
@@ -241,7 +241,7 @@ func (r *PermissionResource) Delete(ctx context.Context, req resource.DeleteRequ
 	err := r.client.DeletePermission(rolename, resource, action)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Create Nacos permission",
+			"Unable to delete permission",
 			err.Error(),
 		)
 		return

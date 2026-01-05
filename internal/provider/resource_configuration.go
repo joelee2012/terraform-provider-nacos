@@ -231,7 +231,7 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 	err = r.client.CreateConfig(opts)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Create Nacos configuration",
+			"Unable to create configuration",
 			err.Error(),
 		)
 		return
@@ -273,7 +273,7 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 	namespaceId, group, dataId, err := ParseThreePartID(data.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Parse Nacos configuration",
+			"Unable to parse configuration id",
 			err.Error(),
 		)
 		return
@@ -303,7 +303,7 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 			return
 		} else {
 			resp.Diagnostics.AddError(
-				"Unable to Read Nacos configuration",
+				"Unable to read configuration",
 				err.Error(),
 			)
 			return
@@ -370,7 +370,7 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 	err := r.client.CreateConfig(opts)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Update Nacos namespaces",
+			"Unable to update namespaces",
 			err.Error(),
 		)
 		return
@@ -382,7 +382,7 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read Nacos configuration after updating resource",
+			"Unable to read configuration after updating resource",
 			err.Error(),
 		)
 		return
@@ -433,7 +433,7 @@ func (r *ConfigurationResource) Delete(ctx context.Context, req resource.DeleteR
 	err := r.client.DeleteConfig(opts)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Delete Nacos configuration",
+			"Unable to delete configuration",
 			err.Error(),
 		)
 		return
