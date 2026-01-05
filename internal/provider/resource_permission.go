@@ -150,19 +150,10 @@ func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	data.ID = types.StringValue(id)
-	data.RoleName = types.StringValue(rolename)
-	data.Resource = types.StringValue(resource)
-	data.Action = types.StringValue(action)
 
 	tflog.Debug(ctx, "created permission", map[string]any{"role_name": rolename, "resource": resource, "action": action})
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-
-	// Set data returned by API in identity
-	// identity := PermissionResourceIdentityModel{
-	// 	ID: types.StringValue(id),
-	// }
-	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -204,12 +195,6 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-
-	// Set data returned by API in identity
-	// identity := PermissionResourceIdentityModel{
-	// 	ID: types.StringValue(id),
-	// }
-	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *PermissionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -252,18 +237,3 @@ func (r *PermissionResource) Delete(ctx context.Context, req resource.DeleteRequ
 func (r *PermissionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
-
-// Struct model for identity data handling.
-type PermissionResourceIdentityModel struct {
-	ID types.String `tfsdk:"id"`
-}
-
-// func (r *PermissionResource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
-// 	resp.IdentitySchema = identityschema.Schema{
-// 		Attributes: map[string]identityschema.Attribute{
-// 			"id": identityschema.StringAttribute{
-// 				RequiredForImport: true, // must be set during import by the practitioner
-// 			},
-// 		},
-// 	}
-// }

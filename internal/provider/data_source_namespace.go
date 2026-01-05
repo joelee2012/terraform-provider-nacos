@@ -128,9 +128,6 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 		"namespace_id": ns.ID,
 		"name":         ns.Name,
 		"description":  ns.Description,
-		"quota":        ns.Quota,
-		"type":         ns.Type,
-		"config_count": ns.ConfigCount,
 	})
 
 	// Save data into Terraform state

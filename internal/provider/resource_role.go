@@ -138,18 +138,10 @@ func (r *RoleResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	data.ID = types.StringValue(id)
-	data.Name = types.StringValue(name)
-	data.Username = types.StringValue(username)
 
 	tflog.Debug(ctx, "created role", map[string]any{"name": name, "username": username})
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-
-	// Set data returned by API in identity
-	// identity := RoleResourceIdentityModel{
-	// 	ID: types.StringValue(id),
-	// }
-	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *RoleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -189,12 +181,6 @@ func (r *RoleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-
-	// Set data returned by API in identity
-	// identity := RoleResourceIdentityModel{
-	// 	ID: types.StringValue(BuildRoleID(role.Name, role.Username)),
-	// }
-	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *RoleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -238,18 +224,3 @@ func (r *RoleResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 func (r *RoleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
-
-// Struct model for identity data handling.
-type RoleResourceIdentityModel struct {
-	ID types.String `tfsdk:"id"`
-}
-
-// func (r *RoleResource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
-// 	resp.IdentitySchema = identityschema.Schema{
-// 		Attributes: map[string]identityschema.Attribute{
-// 			"id": identityschema.StringAttribute{
-// 				RequiredForImport: true, // must be set during import by the practitioner
-// 			},
-// 		},
-// 	}
-// }

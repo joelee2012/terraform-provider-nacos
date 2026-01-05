@@ -252,12 +252,6 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 	})
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-
-	// Set data returned by API in identity
-	// identity := ConfigurationResourceIdentityModel{
-	// 	ID: types.StringValue(id),
-	// }
-	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -278,17 +272,11 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 		)
 		return
 	}
-	tflog.Debug(ctx, "import configuration", map[string]any{
+	tflog.Debug(ctx, "read configuration", map[string]any{
 		"namespace_id": namespaceId,
 		"group":        group,
 		"data_id":      dataId,
 	})
-	// Set data returned by API in identity
-	// var identity ConfigurationResourceIdentityModel
-	// resp.Diagnostics.Append(req.Identity.Get(ctx, &identity)...)
-	// if resp.Diagnostics.HasError() {
-	// 	return
-	// }
 
 	config, err := r.client.GetConfig(&nacos.GetCfgOpts{
 		NamespaceID: namespaceId,
@@ -298,8 +286,6 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 	if err != nil {
 		if IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
-			// Clear any identity data
-			// resp.Diagnostics.Append(resp.Identity.Set(ctx, &ConfigurationResourceIdentityModel{})...)
 			return
 		} else {
 			resp.Diagnostics.AddError(
@@ -310,20 +296,10 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 		}
 	}
 
-	if config == nil {
-		resp.State.RemoveResource(ctx)
-		// Clear any identity data
-		// resp.Diagnostics.Append(resp.Identity.Set(ctx, &ConfigurationResourceIdentityModel{})...)
-		return
-	}
-
 	resp.Diagnostics.Append(data.SetFromConfiguration(ctx, config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	id := BuildThreePartID(namespaceId, group, dataId)
-	data.ID = types.StringValue(id)
 
 	tflog.Debug(ctx, "found configuration", map[string]any{
 		"namespace_id": namespaceId,
@@ -332,11 +308,6 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 	})
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-	// Set data returned by API in identity
-	// identity := ConfigurationResourceIdentityModel{
-	// 	ID: types.StringValue(id),
-	// }
-	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -392,9 +363,6 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	id := BuildThreePartID(opts.NamespaceID, opts.Group, opts.DataID)
-	data.ID = types.StringValue(id)
-
 	tflog.Debug(ctx, "updated configuration", map[string]any{
 		"namespace_id": opts.NamespaceID,
 		"group":        opts.Group,
@@ -402,12 +370,6 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 	})
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-
-	// Set data returned by API in identity
-	// identity := ConfigurationResourceIdentityModel{
-	// 	ID: types.StringValue(id),
-	// }
-	// resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 }
 
 func (r *ConfigurationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -443,21 +405,6 @@ func (r *ConfigurationResource) Delete(ctx context.Context, req resource.DeleteR
 func (r *ConfigurationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
-
-// Struct model for identity data handling.
-type ConfigurationResourceIdentityModel struct {
-	ID types.String `tfsdk:"id"`
-}
-
-// func (r *ConfigurationResource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
-// 	resp.IdentitySchema = identityschema.Schema{
-// 		Attributes: map[string]identityschema.Attribute{
-// 			"id": identityschema.StringAttribute{
-// 				RequiredForImport: true, // must be set during import by the practitioner
-// 			},
-// 		},
-// 	}
-// }
 
 func BuildThreePartID(namespaceID, group, dataID string) string {
 	return fmt.Sprintf("%s:%s:%s", namespaceID, group, dataID)
