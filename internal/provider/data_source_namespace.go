@@ -124,8 +124,14 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	// Write logs using the tflog package
-	// Documentation: https://terraform.io/plugin/log
-	tflog.Trace(ctx, "read a data source")
+	tflog.Debug(ctx, "retrieved namespace details", map[string]any{
+		"namespace_id": ns.ID,
+		"name":         ns.Name,
+		"description":  ns.Description,
+		"quota":        ns.Quota,
+		"type":         ns.Type,
+		"config_count": ns.ConfigCount,
+	})
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

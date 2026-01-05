@@ -425,6 +425,11 @@ func (r *ConfigurationResource) Delete(ctx context.Context, req resource.DeleteR
 		Group:       data.Group.ValueString(),
 		NamespaceID: data.NamespaceID.ValueString(),
 	}
+	tflog.Debug(ctx, "deleting configuration", map[string]any{
+		"namespace_id": opts.NamespaceID,
+		"group":        opts.Group,
+		"data_id":      opts.DataID,
+	})
 	err := r.client.DeleteConfig(opts)
 	if err != nil {
 		resp.Diagnostics.AddError(
