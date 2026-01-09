@@ -117,7 +117,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 	err = r.client.CreateUser(username, password)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Create Nacos user",
+			"Unable to create user",
 			err.Error(),
 		)
 		return
@@ -151,7 +151,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 			resp.State.RemoveResource(ctx)
 		} else {
 			resp.Diagnostics.AddError(
-				"Unable to Read Nacos user",
+				"Unable to read user",
 				err.Error(),
 			)
 		}
@@ -198,7 +198,7 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	err := r.client.DeleteUser(data.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Create Nacos user",
+			"Unable to delete user",
 			err.Error(),
 		)
 		return

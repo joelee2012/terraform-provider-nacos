@@ -107,7 +107,7 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 	ns, err := d.client.GetNamespace(data.NamespaceId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read Nacos namespaces",
+			"Unable to read namespace",
 			err.Error(),
 		)
 		return
@@ -124,8 +124,11 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	// Write logs using the tflog package
-	// Documentation: https://terraform.io/plugin/log
-	tflog.Trace(ctx, "read a data source")
+	tflog.Debug(ctx, "retrieved namespace details", map[string]any{
+		"namespace_id": ns.ID,
+		"name":         ns.Name,
+		"description":  ns.Description,
+	})
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

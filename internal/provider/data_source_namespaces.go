@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/joelee2012/nacosctl/pkg/nacos"
 )
 
@@ -119,7 +118,7 @@ func (d *NamespacesDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	namespaces, err := d.client.ListNamespace()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read Nacos namespaces",
+			"Unable to read namespaces",
 			err.Error(),
 		)
 		return
@@ -137,10 +136,6 @@ func (d *NamespacesDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		}
 		data.Namespaces = append(data.Namespaces, &namespace)
 	}
-
-	// Write logs using the tflog package
-	// Documentation: https://terraform.io/plugin/log
-	tflog.Trace(ctx, "read a data source")
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

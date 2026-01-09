@@ -109,7 +109,7 @@ func (r *PermissionDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	_, err := r.client.GetPermission(roleName, resource, action)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read Nacos permission",
+			"Unable to read permission",
 			err.Error(),
 		)
 		return
@@ -125,13 +125,4 @@ func (r *PermissionDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	tflog.Debug(ctx, "found permission", map[string]any{"id": id})
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-
-	// Ensure the ID is properly set in the state
-	if data.ID.ValueString() != id {
-		resp.Diagnostics.AddError(
-			"Inconsistent ID after read",
-			fmt.Sprintf("Expected ID '%s' but got '%s'", id, data.ID.ValueString()),
-		)
-		return
-	}
 }
