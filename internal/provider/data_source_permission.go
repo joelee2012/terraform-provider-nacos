@@ -106,7 +106,7 @@ func (r *PermissionDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		"action":    action,
 	})
 
-	_, err := r.client.GetPermission(roleName, resource, action)
+	perm, err := r.client.GetPermission(roleName, resource, action)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to read permission",
@@ -116,13 +116,12 @@ func (r *PermissionDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	}
 
 	// Construct the ID before setting it to ensure consistency
-	id := fmt.Sprintf("%s:%s:%s", roleName, resource, action)
+	id := BuildThreePartID(perm.Role, perm.Resource, perm.Action)
 	data.ID = types.StringValue(id)
-	data.RoleName = types.StringValue(roleName)
-	data.Resource = types.StringValue(resource)
-	data.Action = types.StringValue(action)
+	data.RoleName = types.StringValue(perm.Role)
+	data.Resource = types.StringValue(perm.Resource)
+	data.Action = types.StringValue(perm.Action)
 
-	tflog.Debug(ctx, "found permission", map[string]any{"id": id})
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

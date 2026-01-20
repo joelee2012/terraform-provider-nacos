@@ -96,7 +96,6 @@ func (r *UserDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	data.ID = types.StringValue(user.Name)
 	data.Username = types.StringValue(user.Name)
 
-	tflog.Debug(ctx, "found user", map[string]any{"username": username})
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

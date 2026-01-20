@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/joelee2012/nacosctl/pkg/nacos"
 )
 
@@ -122,13 +121,6 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 		Type:        types.Int64Value(int64(ns.Type)),
 		ConfigCount: types.Int64Value(int64(ns.ConfigCount)),
 	}
-
-	// Write logs using the tflog package
-	tflog.Debug(ctx, "retrieved namespace details", map[string]any{
-		"namespace_id": ns.ID,
-		"name":         ns.Name,
-		"description":  ns.Description,
-	})
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
