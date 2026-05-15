@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/joelee2012/nacosctl/pkg/nacos"
+	"github.com/joelee2012/go-nacos"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -155,11 +155,11 @@ func (d *ConfigurationsDataSource) Read(ctx context.Context, req datasource.Read
 	allCs := new(nacos.ConfigurationList)
 	var err error
 	if data.DataID.IsNull() && data.Group.IsNull() && data.NamespaceID.IsNull() {
-		allCs, err = d.client.ListAllConfig()
+		allCs, err = d.client.ListAllConfig(ctx)
 	} else if data.DataID.IsNull() {
-		allCs, err = d.client.ListConfigInNs(data.NamespaceID.ValueString(), data.Group.ValueString())
+		allCs, err = d.client.ListConfigInNs(ctx, data.NamespaceID.ValueString(), data.Group.ValueString())
 	} else {
-		allCs, err = d.client.ListConfig(&nacos.ListCfgOpts{DataID: data.DataID.ValueString(), Group: data.Group.ValueString(), NamespaceID: data.NamespaceID.ValueString()})
+		allCs, err = d.client.ListConfig(ctx, &nacos.ListCfgOpts{DataID: data.DataID.ValueString(), Group: data.Group.ValueString(), NamespaceID: data.NamespaceID.ValueString()})
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
