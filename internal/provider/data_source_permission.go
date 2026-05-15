@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/joelee2012/nacosctl/pkg/nacos"
+	"github.com/joelee2012/go-nacos"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -106,7 +106,7 @@ func (r *PermissionDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		"action":    action,
 	})
 
-	perm, err := r.client.GetPermission(roleName, resource, action)
+	perm, err := r.client.GetPermission(ctx, roleName, resource, action)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to read permission",
