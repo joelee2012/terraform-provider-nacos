@@ -151,8 +151,23 @@ func (p *NacosProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		return
 	}
 
-	// Create a new HashiCups client using the configuration values
-	client := nacos.NewClient(host, username, password)
+	// Create a new Nacos client using the configuration values
+	client, err := nacos.NewClient(host, username, password)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to create Nacos API client",
+			err.Error(),
+		)
+		return
+	}
+	// Detect API version early to avoid URL path issues during redirects
+	if _, err := client.GetVersion(ctx); err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to detect Nacos API version",
+			err.Error(),
+		)
+		return
+	}
 	// Example client configuration for data sources and resources
 	resp.DataSourceData = client
 	resp.ResourceData = client
