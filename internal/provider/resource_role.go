@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/joelee2012/go-nacos/pkg/nacos"
+	"github.com/joelee2012/go-nacos"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -117,7 +117,7 @@ func (r *RoleResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	tflog.Debug(ctx, "creating role", map[string]any{"name": name, "username": username})
 
-	role, err := r.client.GetRole(name, username)
+	role, err := r.client.GetRole(ctx, name, username)
 	id := BuildRoleID(name, username)
 	if err == nil && role != nil {
 		resp.Diagnostics.AddError(
@@ -128,7 +128,7 @@ func (r *RoleResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	err = r.client.CreateRole(name, username)
+	err = r.client.CreateRole(ctx, name, username)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to create role",
@@ -162,7 +162,7 @@ func (r *RoleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		)
 		return
 	}
-	role, err := r.client.GetRole(name, username)
+	role, err := r.client.GetRole(ctx, name, username)
 	if err != nil {
 		if IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -210,7 +210,7 @@ func (r *RoleResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	name := data.Name.ValueString()
 	username := data.Username.ValueString()
 	tflog.Debug(ctx, "deleting role", map[string]any{"name": name, "username": username})
-	err := r.client.DeleteRole(name, username)
+	err := r.client.DeleteRole(ctx, name, username)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to delete role",
