@@ -56,7 +56,7 @@ func (p *NacosProvider) Schema(ctx context.Context, req provider.SchemaRequest, 
 				Optional:            true,
 			},
 			"api_version": schema.StringAttribute{
-				MarkdownDescription: "API version of nacos server (`v1` for Nacos v2.x, `v3` for Nacos v3.x). If not set, the provider will auto-detect the version. Set the value statically in the configuration, or use the `NACOS_API_VERSION` environment variable.",
+				MarkdownDescription: "API version of nacos server (`v1` for Nacos v2.x, `v3` for Nacos v3.x). Defaults to `v1`. Set the value statically in the configuration, or use the `NACOS_API_VERSION` environment variable.",
 				Optional:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("v1", "v3"),
@@ -124,7 +124,7 @@ func (p *NacosProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	host := os.Getenv("NACOS_HOST")
 	username := os.Getenv("NACOS_USERNAME")
 	password := os.Getenv("NACOS_PASSWORD")
-	apiVersion := os.Getenv("NACOS_API_VERSION")
+	apiVersion := "v1"
 
 	if !config.Host.IsNull() {
 		host = config.Host.ValueString()
@@ -140,6 +140,10 @@ func (p *NacosProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 	if !config.APIVersion.IsNull() {
 		apiVersion = config.APIVersion.ValueString()
+	}
+
+	if envAPIVersion := os.Getenv("NACOS_API_VERSION"); envAPIVersion != "" {
+		apiVersion = envAPIVersion
 	}
 
 	// If any of the expected configurations are missing, return
