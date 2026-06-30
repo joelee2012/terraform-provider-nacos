@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	stringvalidator "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -11,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	stringvalidator "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/joelee2012/go-nacos"
 )
 
@@ -28,9 +28,9 @@ type NacosProvider struct {
 
 // NacosProviderModel describes the provider data model.
 type NacosProviderModel struct {
-	Host     types.String `tfsdk:"host"`
-	Username types.String `tfsdk:"username"`
-	Password types.String `tfsdk:"password"`
+	Host       types.String `tfsdk:"host"`
+	Username   types.String `tfsdk:"username"`
+	Password   types.String `tfsdk:"password"`
 	APIVersion types.String `tfsdk:"api_version"`
 }
 
@@ -56,7 +56,7 @@ func (p *NacosProvider) Schema(ctx context.Context, req provider.SchemaRequest, 
 				Optional:            true,
 			},
 			"api_version": schema.StringAttribute{
-				MarkdownDescription: "API version of nacos server (`v1` for Nacos v2.x, `v3` for Nacos v3.x). Defaults to `v1`. Set the value statically in the configuration, or use the `NACOS_API_VERSION` environment variable.",
+				MarkdownDescription: "API version of nacos server (`v1` for Nacos v2.x, `v3` for Nacos v3.x). If not set, the provider will auto-detect the version. Set the value statically in the configuration, or use the `NACOS_API_VERSION` environment variable.",
 				Optional:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("v1", "v3"),
