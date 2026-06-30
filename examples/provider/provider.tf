@@ -1,8 +1,7 @@
 provider "nacos" {
-  host       = "https://<nacos-url>"
-  username   = "<nacos username>"
-  password   = "<nacos password>"
-  api_version = "v1"
+  host     = "https://<nacos-url>"
+  username = "<nacos username>"
+  password = "<nacos password>"
 }
 
 resource "nacos_namespace" "example" {
