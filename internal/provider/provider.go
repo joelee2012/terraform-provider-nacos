@@ -124,7 +124,7 @@ func (p *NacosProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	host := os.Getenv("NACOS_HOST")
 	username := os.Getenv("NACOS_USERNAME")
 	password := os.Getenv("NACOS_PASSWORD")
-	apiVersion := "v1"
+	apiVersion := os.Getenv("NACOS_API_VERSION")
 
 	if !config.Host.IsNull() {
 		host = config.Host.ValueString()
@@ -140,10 +140,6 @@ func (p *NacosProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 	if !config.APIVersion.IsNull() {
 		apiVersion = config.APIVersion.ValueString()
-	}
-
-	if envAPIVersion := os.Getenv("NACOS_API_VERSION"); envAPIVersion != "" {
-		apiVersion = envAPIVersion
 	}
 
 	// If any of the expected configurations are missing, return
