@@ -136,10 +136,17 @@ func (d *ConfigurationDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 	cfg, err := d.client.GetConfig(ctx, &nacos.GetCfgOpts{DataID: data.DataID.ValueString(), Group: data.Group.ValueString(), NamespaceID: data.NamespaceID.ValueString()})
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to read configuration",
-			err.Error(),
-		)
+		if IsNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"Configuration not found",
+				fmt.Sprintf("Configuration with namespace_id=%s, group=%s, data_id=%s does not exist.", data.NamespaceID.ValueString(), data.Group.ValueString(), data.DataID.ValueString()),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to read configuration",
+				err.Error(),
+			)
+		}
 		return
 	}
 

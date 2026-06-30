@@ -209,6 +209,13 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 		)
 		return
 	}
+	if err != nil && !IsNotFoundError(err) {
+		resp.Diagnostics.AddError(
+			"Unable to read configuration",
+			err.Error(),
+		)
+		return
+	}
 	opts := &nacos.CreateCfgOpts{
 		DataID:      data.DataID.ValueString(),
 		Group:       data.Group.ValueString(),
@@ -341,7 +348,7 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 	err := r.client.CreateConfig(ctx, opts)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to update namespaces",
+			"Unable to update configuration",
 			err.Error(),
 		)
 		return

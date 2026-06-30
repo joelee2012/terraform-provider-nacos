@@ -86,10 +86,17 @@ func (r *UserDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 
 	user, err := r.client.GetUser(ctx, username)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to read user",
-			err.Error(),
-		)
+		if IsNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"User not found",
+				fmt.Sprintf("User with username=%s does not exist.", username),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to read user",
+				err.Error(),
+			)
+		}
 		return
 	}
 

@@ -105,10 +105,17 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 	ns, err := d.client.GetNamespace(ctx, data.NamespaceId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to read namespace",
-			err.Error(),
-		)
+		if IsNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"Namespace not found",
+				fmt.Sprintf("Namespace with namespace_id=%s does not exist.", data.NamespaceId.ValueString()),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to read namespace",
+				err.Error(),
+			)
+		}
 		return
 	}
 

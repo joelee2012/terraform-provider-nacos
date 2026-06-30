@@ -92,10 +92,17 @@ func (r *RoleDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 
 	role, err := r.client.GetRole(ctx, name, username)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to read role",
-			err.Error(),
-		)
+		if IsNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"Role not found",
+				fmt.Sprintf("Role with name=%s, username=%s does not exist.", name, username),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to read role",
+				err.Error(),
+			)
+		}
 		return
 	}
 
