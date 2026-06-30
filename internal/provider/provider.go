@@ -9,7 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	stringvalidator "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/joelee2012/go-nacos"
 )
 
@@ -29,6 +31,7 @@ type NacosProviderModel struct {
 	Host     types.String `tfsdk:"host"`
 	Username types.String `tfsdk:"username"`
 	Password types.String `tfsdk:"password"`
+	APIVersion types.String `tfsdk:"api_version"`
 }
 
 func (p *NacosProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -51,6 +54,13 @@ func (p *NacosProvider) Schema(ctx context.Context, req provider.SchemaRequest, 
 			"password": schema.StringAttribute{
 				MarkdownDescription: "Password for nacos server, set the value statically in the configuration, or use the `NACOS_PASSWORD` environment variable.",
 				Optional:            true,
+			},
+			"api_version": schema.StringAttribute{
+				MarkdownDescription: "API version of nacos server (`v1` for Nacos v2.x, `v3` for Nacos v3.x). If not set, the provider will auto-detect the version. Set the value statically in the configuration, or use the `NACOS_API_VERSION` environment variable.",
+				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("v1", "v3"),
+				},
 			},
 		},
 	}
@@ -95,12 +105,26 @@ func (p *NacosProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		return
 	}
 
+	if config.APIVersion.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("api_version"),
+			"Unknown Nacos API Version",
+			"The provider cannot create the Nacos API client as there is an unknown configuration value for the Nacos API version. "+
+				"Either target apply the source of the value first, set the value statically in the configuration, or use the NACOS_API_VERSION environment variable.",
+		)
+	}
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Default values to environment variables, but override
 	// with Terraform configuration value if set.
 
 	host := os.Getenv("NACOS_HOST")
 	username := os.Getenv("NACOS_USERNAME")
 	password := os.Getenv("NACOS_PASSWORD")
+	apiVersion := os.Getenv("NACOS_API_VERSION")
 
 	if !config.Host.IsNull() {
 		host = config.Host.ValueString()
@@ -112,6 +136,10 @@ func (p *NacosProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 	if !config.Password.IsNull() {
 		password = config.Password.ValueString()
+	}
+
+	if !config.APIVersion.IsNull() {
+		apiVersion = config.APIVersion.ValueString()
 	}
 
 	// If any of the expected configurations are missing, return
@@ -160,7 +188,10 @@ func (p *NacosProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		)
 		return
 	}
-	// Detect API version early to avoid URL path issues during redirects
+	if apiVersion != "" {
+		client.APIVersion = apiVersion
+	}
+	// Detect or validate API version early to avoid URL path issues during redirects
 	if _, err := client.GetVersion(ctx); err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to detect Nacos API version",
