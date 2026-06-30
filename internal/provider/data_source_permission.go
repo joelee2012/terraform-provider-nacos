@@ -108,10 +108,17 @@ func (r *PermissionDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	perm, err := r.client.GetPermission(ctx, roleName, resource, action)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to read permission",
-			err.Error(),
-		)
+		if IsNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"Permission not found",
+				fmt.Sprintf("Permission with role_name=%s, resource=%s, action=%s does not exist.", roleName, resource, action),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to read permission",
+				err.Error(),
+			)
+		}
 		return
 	}
 

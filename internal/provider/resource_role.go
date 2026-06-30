@@ -127,6 +127,13 @@ func (r *RoleResource) Create(ctx context.Context, req resource.CreateRequest, r
 		)
 		return
 	}
+	if err != nil && !IsNotFoundError(err) {
+		resp.Diagnostics.AddError(
+			"Unable to read role",
+			err.Error(),
+		)
+		return
+	}
 
 	err = r.client.CreateRole(ctx, name, username)
 	if err != nil {

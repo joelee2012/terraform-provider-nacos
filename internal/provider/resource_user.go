@@ -113,6 +113,13 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		)
 		return
 	}
+	if err != nil && !IsNotFoundError(err) {
+		resp.Diagnostics.AddError(
+			"Unable to read user",
+			err.Error(),
+		)
+		return
+	}
 
 	err = r.client.CreateUser(ctx, username, password)
 	if err != nil {

@@ -139,6 +139,13 @@ func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequ
 		)
 		return
 	}
+	if err != nil && !IsNotFoundError(err) {
+		resp.Diagnostics.AddError(
+			"Unable to read permission",
+			err.Error(),
+		)
+		return
+	}
 
 	err = r.client.CreatePermission(ctx, rolename, resource, action)
 	if err != nil {

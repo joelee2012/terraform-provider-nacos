@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -127,6 +126,13 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 		)
 		return
 	}
+	if err != nil && !IsNotFoundError(err) {
+		resp.Diagnostics.AddError(
+			"Unable to read namespace",
+			err.Error(),
+		)
+		return
+	}
 
 	err = r.client.CreateNamespace(ctx, opts)
 	if err != nil {
@@ -142,14 +148,6 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 	tflog.Debug(ctx, "created namespace", map[string]any{"id": data.NamespaceID.ValueString()})
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func IsNotFoundError(err error) bool {
-	var nacosErr nacos.NacosErr
-	if errors.As(err, &nacosErr) {
-		return nacosErr.IsNotFound()
-	}
-	return errors.Is(err, nacos.ErrNotFound)
 }
 
 func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
