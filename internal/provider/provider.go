@@ -105,19 +105,6 @@ func (p *NacosProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		return
 	}
 
-	if config.APIVersion.IsUnknown() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("api_version"),
-			"Unknown Nacos API Version",
-			"The provider cannot create the Nacos API client as there is an unknown configuration value for the Nacos API version. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the NACOS_API_VERSION environment variable.",
-		)
-	}
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	// Default values to environment variables, but override
 	// with Terraform configuration value if set.
 
