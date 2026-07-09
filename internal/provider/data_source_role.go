@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/joelee2012/nacosctl/pkg/nacos"
+	"github.com/joelee2012/go-nacos"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -90,12 +90,19 @@ func (r *RoleDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	username := data.Username.ValueString()
 	tflog.Debug(ctx, "reading role", map[string]any{"name": name, "username": username})
 
-	role, err := r.client.GetRole(name, username)
+	role, err := r.client.GetRole(ctx, name, username)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to read role",
-			err.Error(),
-		)
+		if IsNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"Role not found",
+				fmt.Sprintf("Role with name=%s, username=%s does not exist.", name, username),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to read role",
+				err.Error(),
+			)
+		}
 		return
 	}
 

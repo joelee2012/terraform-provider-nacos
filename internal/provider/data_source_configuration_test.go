@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
-	"github.com/joelee2012/nacosctl/pkg/nacos"
+	"github.com/joelee2012/go-nacos"
 )
 
 func TestAccConfigurationDataSource(t *testing.T) {
@@ -22,7 +22,7 @@ server:
 `
 	namespaceId := ""
 	setupTestConfiguration(t, &nacos.CreateCfgOpts{NamespaceID: namespaceId, DataID: dataId, Group: group, Content: content})
-	if testClient.APIVersion == "v3" {
+	if testClient != nil && testClient.APIVersion == "v3" {
 		namespaceId = "public"
 	}
 	config := fmt.Sprintf(`

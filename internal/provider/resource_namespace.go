@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -12,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/joelee2012/nacosctl/pkg/nacos"
+	"github.com/joelee2012/go-nacos"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -111,14 +110,14 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	opts := &nacos.CreateNsOpts{
+	opts := &nacos.NsOpts{
 		ID:          data.NamespaceID.ValueString(),
 		Name:        data.Name.ValueString(),
 		Description: data.Description.ValueString(),
 	}
 	tflog.Debug(ctx, "creating namespace", map[string]any{"id": data.NamespaceID.ValueString()})
 
-	config, err := r.client.GetNamespace(opts.ID)
+	config, err := r.client.GetNamespace(ctx, opts.ID)
 	if err == nil && config != nil {
 		resp.Diagnostics.AddError(
 			"Namespace already exists",
@@ -127,8 +126,15 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 		)
 		return
 	}
+	if err != nil && !IsNotFoundError(err) {
+		resp.Diagnostics.AddError(
+			"Unable to read namespace",
+			err.Error(),
+		)
+		return
+	}
 
-	err = r.client.CreateNamespace(opts)
+	err = r.client.CreateNamespace(ctx, opts)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to create namespace",
@@ -144,10 +150,6 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func IsNotFoundError(err error) bool {
-	return strings.HasPrefix(err.Error(), "404 Not Found")
-}
-
 func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data NamespaceResourceModel
 
@@ -158,7 +160,7 @@ func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	ns, err := r.client.GetNamespace(data.ID.ValueString())
+	ns, err := r.client.GetNamespace(ctx, data.ID.ValueString())
 	if err != nil {
 		if IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -187,12 +189,12 @@ func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	opts := &nacos.CreateNsOpts{
+	opts := &nacos.NsOpts{
 		ID:          data.NamespaceID.ValueString(),
 		Name:        data.Name.ValueString(),
 		Description: data.Description.ValueString(),
 	}
-	err := r.client.UpdateNamespace(opts)
+	err := r.client.UpdateNamespace(ctx, opts)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to update namespace",
@@ -217,7 +219,7 @@ func (r *NamespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	err := r.client.DeleteNamespace(data.ID.ValueString())
+	err := r.client.DeleteNamespace(ctx, data.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to delete namespace",

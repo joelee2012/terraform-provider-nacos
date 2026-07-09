@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/joelee2012/nacosctl/pkg/nacos"
+	"github.com/joelee2012/go-nacos"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -103,12 +103,19 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	ns, err := d.client.GetNamespace(data.NamespaceId.ValueString())
+	ns, err := d.client.GetNamespace(ctx, data.NamespaceId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to read namespace",
-			err.Error(),
-		)
+		if IsNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"Namespace not found",
+				fmt.Sprintf("Namespace with namespace_id=%s does not exist.", data.NamespaceId.ValueString()),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to read namespace",
+				err.Error(),
+			)
+		}
 		return
 	}
 

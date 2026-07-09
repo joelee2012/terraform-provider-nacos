@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/joelee2012/nacosctl/pkg/nacos"
+	"github.com/joelee2012/go-nacos"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -104,7 +104,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 	password := data.Password.ValueString()
 	tflog.Debug(ctx, "creating user", map[string]any{"username": username})
 
-	user, err := r.client.GetUser(username)
+	user, err := r.client.GetUser(ctx, username)
 	if err == nil && user != nil {
 		resp.Diagnostics.AddError(
 			"User already exists",
@@ -113,8 +113,15 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		)
 		return
 	}
+	if err != nil && !IsNotFoundError(err) {
+		resp.Diagnostics.AddError(
+			"Unable to read user",
+			err.Error(),
+		)
+		return
+	}
 
-	err = r.client.CreateUser(username, password)
+	err = r.client.CreateUser(ctx, username, password)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to create user",
@@ -145,7 +152,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	}
 
 	id := data.ID.ValueString()
-	user, err := r.client.GetUser(id)
+	user, err := r.client.GetUser(ctx, id)
 	if err != nil {
 		if IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -195,7 +202,7 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
-	err := r.client.DeleteUser(data.ID.ValueString())
+	err := r.client.DeleteUser(ctx, data.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to delete user",

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/joelee2012/nacosctl/pkg/nacos"
+	"github.com/joelee2012/go-nacos"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -130,7 +130,7 @@ func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "creating permission", map[string]any{"role_name": rolename, "resource": resource, "action": action})
 
-	perm, err := r.client.GetPermission(rolename, resource, action)
+	perm, err := r.client.GetPermission(ctx, rolename, resource, action)
 	if err == nil && perm != nil {
 		resp.Diagnostics.AddError(
 			"Permission already exists",
@@ -139,8 +139,15 @@ func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequ
 		)
 		return
 	}
+	if err != nil && !IsNotFoundError(err) {
+		resp.Diagnostics.AddError(
+			"Unable to read permission",
+			err.Error(),
+		)
+		return
+	}
 
-	err = r.client.CreatePermission(rolename, resource, action)
+	err = r.client.CreatePermission(ctx, rolename, resource, action)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to create permission",
@@ -174,7 +181,7 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 		)
 		return
 	}
-	_, err = r.client.GetPermission(rolename, resource, action)
+	_, err = r.client.GetPermission(ctx, rolename, resource, action)
 	if err != nil {
 		if IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -223,7 +230,7 @@ func (r *PermissionResource) Delete(ctx context.Context, req resource.DeleteRequ
 	rolename := data.RoleName.ValueString()
 	resource := data.Resource.ValueString()
 	action := data.Action.ValueString()
-	err := r.client.DeletePermission(rolename, resource, action)
+	err := r.client.DeletePermission(ctx, rolename, resource, action)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to delete permission",

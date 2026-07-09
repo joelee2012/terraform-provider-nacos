@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/joelee2012/nacosctl/pkg/nacos"
+	"github.com/joelee2012/go-nacos"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -84,12 +84,19 @@ func (r *UserDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	username := data.Username.ValueString()
 	tflog.Debug(ctx, "reading user", map[string]any{"username": username})
 
-	user, err := r.client.GetUser(username)
+	user, err := r.client.GetUser(ctx, username)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to read user",
-			err.Error(),
-		)
+		if IsNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"User not found",
+				fmt.Sprintf("User with username=%s does not exist.", username),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to read user",
+				err.Error(),
+			)
+		}
 		return
 	}
 

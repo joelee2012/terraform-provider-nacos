@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/joelee2012/nacosctl/pkg/nacos"
+	"github.com/joelee2012/go-nacos"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -199,13 +199,20 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 		"data_id":      getOpts.DataID,
 	})
 
-	config, err := r.client.GetConfig(getOpts)
+	config, err := r.client.GetConfig(ctx, getOpts)
 	id := BuildThreePartID(getOpts.NamespaceID, getOpts.Group, getOpts.DataID)
 	if err == nil && config != nil {
 		resp.Diagnostics.AddError(
 			"Configuration already exists",
 			fmt.Sprintf("A configuration with namespace_id=%s,group=%s,data_id=%s already exists. "+
 				"Run `terraform import nacos_configuration.example %s` to manage it.", getOpts.NamespaceID, getOpts.Group, getOpts.DataID, id),
+		)
+		return
+	}
+	if err != nil && !IsNotFoundError(err) {
+		resp.Diagnostics.AddError(
+			"Unable to read configuration",
+			err.Error(),
 		)
 		return
 	}
@@ -228,7 +235,7 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 		opts.Tags = tags
 	}
 
-	err = r.client.CreateConfig(opts)
+	err = r.client.CreateConfig(ctx, opts)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to create configuration",
@@ -278,7 +285,7 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 		"data_id":      dataId,
 	})
 
-	config, err := r.client.GetConfig(&nacos.GetCfgOpts{
+	config, err := r.client.GetConfig(ctx, &nacos.GetCfgOpts{
 		NamespaceID: namespaceId,
 		Group:       group,
 		DataID:      dataId,
@@ -338,15 +345,15 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 		}
 		opts.Tags = tags
 	}
-	err := r.client.CreateConfig(opts)
+	err := r.client.CreateConfig(ctx, opts)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to update namespaces",
+			"Unable to update configuration",
 			err.Error(),
 		)
 		return
 	}
-	config, err := r.client.GetConfig(&nacos.GetCfgOpts{
+	config, err := r.client.GetConfig(ctx, &nacos.GetCfgOpts{
 		DataID:      data.DataID.ValueString(),
 		Group:       data.Group.ValueString(),
 		NamespaceID: data.NamespaceID.ValueString(),
@@ -392,7 +399,7 @@ func (r *ConfigurationResource) Delete(ctx context.Context, req resource.DeleteR
 		"group":        opts.Group,
 		"data_id":      opts.DataID,
 	})
-	err := r.client.DeleteConfig(opts)
+	err := r.client.DeleteConfig(ctx, opts)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to delete configuration",

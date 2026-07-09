@@ -61,6 +61,7 @@ resource "nacos_permission" "test" {
 
 ### Optional
 
+- `api_version` (String) API version of nacos server (`v1` for Nacos v2.x, `v3` for Nacos v3.x). If not set, the provider will auto-detect the version. Set the value statically in the configuration, or use the `NACOS_API_VERSION` environment variable.
 - `host` (String) URL of nacos server, set the value statically in the configuration, or use the `NACOS_HOST` environment variable.
 - `password` (String) Password for nacos server, set the value statically in the configuration, or use the `NACOS_PASSWORD` environment variable.
 - `username` (String) Username for nacos server, set the value statically in the configuration, or use the `NACOS_USERNAME` environment variable.
