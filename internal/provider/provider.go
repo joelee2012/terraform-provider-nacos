@@ -179,8 +179,14 @@ func (p *NacosProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		return
 	}
 
-	// Create a new Nacos client using the configuration values
-	client, err := nacos.NewClient(host, username, password)
+	// Create a new Nacos client using the configuration values. When an API
+	// version is configured, pin it via WithAPIVersion to skip the server
+	// state probe; otherwise the client auto-detects the version during Init.
+	var opts []nacos.Option
+	if apiVersion != "" {
+		opts = append(opts, nacos.WithAPIVersion(apiVersion))
+	}
+	client, err := nacos.NewClient(host, username, password, opts...)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to create Nacos API client",
@@ -188,11 +194,9 @@ func (p *NacosProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		)
 		return
 	}
-	if apiVersion != "" {
-		client.APIVersion = apiVersion
-	}
-	// Detect or validate API version early to avoid URL path issues during redirects
-	if _, err := client.GetVersion(ctx); err != nil {
+	// Detect (or validate the pinned) API version early so that resource and
+	// data-source operations build the correct URL paths from the start.
+	if err := client.Init(ctx); err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to detect Nacos API version",
 			err.Error(),

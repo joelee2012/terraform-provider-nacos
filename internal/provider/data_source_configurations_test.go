@@ -21,8 +21,8 @@ server:
   port: 80
 `
 	namespaceId := ""
-	setupTestConfiguration(t, &nacos.CreateCfgOpts{NamespaceID: namespaceId, DataID: dataId, Group: group, Content: content})
-	if testClient != nil && testClient.APIVersion == "v3" {
+	setupTestConfiguration(t, &nacos.PublishCfgOpts{NamespaceID: namespaceId, DataID: dataId, Group: group, Content: content})
+	if isV3Server() {
 		namespaceId = "public"
 		content = ""
 	}

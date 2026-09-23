@@ -61,7 +61,7 @@ func (r *UserDataSource) Configure(ctx context.Context, req datasource.Configure
 
 	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
+			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *nacos.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 

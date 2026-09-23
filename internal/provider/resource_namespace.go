@@ -117,8 +117,8 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 	}
 	tflog.Debug(ctx, "creating namespace", map[string]any{"id": data.NamespaceID.ValueString()})
 
-	config, err := r.client.GetNamespace(ctx, opts.ID)
-	if err == nil && config != nil {
+	ns, err := r.client.GetNamespace(ctx, opts.ID)
+	if err == nil && ns != nil {
 		resp.Diagnostics.AddError(
 			"Namespace already exists",
 			fmt.Sprintf("A namespace with namespace_id=%s already exists. "+

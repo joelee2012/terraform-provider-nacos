@@ -10,11 +10,9 @@ import (
 )
 
 // IsNotFoundError checks whether an error from the go-nacos client indicates
-// that the requested resource does not exist.
+// that the requested resource does not exist. Since go-nacos v0.4.0 the client
+// returns the sentinel nacos.ErrNotFound for both 404 responses and lookups
+// that come up empty, so a single errors.Is check is sufficient.
 func IsNotFoundError(err error) bool {
-	var nacosErr nacos.NacosErr
-	if errors.As(err, &nacosErr) {
-		return nacosErr.IsNotFound()
-	}
 	return errors.Is(err, nacos.ErrNotFound)
 }

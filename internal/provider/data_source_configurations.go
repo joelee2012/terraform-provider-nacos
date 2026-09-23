@@ -170,7 +170,7 @@ func (d *ConfigurationsDataSource) Read(ctx context.Context, req datasource.Read
 	}
 	for _, cfg := range allCs.Items {
 		data.Items = append(data.Items, &ConfigurationModel{
-			ID:               types.StringValue(BuildThreePartID(cfg.NamespaceID, cfg.Group, cfg.DataID)),
+			ID:               types.StringValue(BuildThreePartID(cfg.GetNamespace(), cfg.GetGroup(), cfg.DataID)),
 			DataID:           types.StringValue(cfg.DataID),
 			Group:            types.StringValue(cfg.GetGroup()),
 			Content:          types.StringValue(cfg.Content),

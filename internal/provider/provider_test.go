@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
@@ -27,10 +28,26 @@ func initTestClient(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create Nacos client: %s", err.Error())
 	}
-	if _, err := client.GetVersion(context.Background()); err != nil {
+	if err := client.Init(context.Background()); err != nil {
 		t.Fatalf("Failed to detect Nacos API version: %s", err.Error())
 	}
 	testClient = client
+}
+
+// isV3Server reports whether the test Nacos server exposes the v3 console API
+// (Nacos 3.x). It replaces the former testClient.APIVersion field access,
+// which became unexported in go-nacos v0.4.0. The test client always
+// auto-detects the version, so GetVersion returns the actual server version
+// (e.g. "3.1.0").
+func isV3Server() bool {
+	if testClient == nil {
+		return false
+	}
+	ver, err := testClient.GetVersion(context.Background())
+	if err != nil {
+		return false
+	}
+	return strings.HasPrefix(ver, "3")
 }
 
 func testAccPreCheck(t *testing.T) {
@@ -46,13 +63,13 @@ func testAccPreCheck(t *testing.T) {
 	initTestClient(t)
 }
 
-func setupTestConfiguration(t *testing.T, opts *nacos.CreateCfgOpts) {
+func setupTestConfiguration(t *testing.T, opts *nacos.PublishCfgOpts) {
 	if os.Getenv("TF_ACC") == "" {
 		return
 	}
 	initTestClient(t)
 	ctx := context.Background()
-	if err := testClient.CreateConfig(ctx, opts); err != nil {
+	if err := testClient.PublishConfig(ctx, opts); err != nil {
 		t.Errorf("Error creating %s:%s:%s: %s", opts.NamespaceID, opts.Group, opts.DataID, err.Error())
 	}
 	t.Cleanup(func() {
