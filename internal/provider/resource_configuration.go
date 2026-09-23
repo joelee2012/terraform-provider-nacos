@@ -58,11 +58,15 @@ func (c *ConfigurationResourceModel) SetFromConfiguration(ctx context.Context, c
 	c.Type = types.StringValue(cfg.Type)
 	var diags diag.Diagnostics
 	if cfg.Tags != "" {
-		tags, diags := types.SetValueFrom(ctx, types.StringType, strings.Split(cfg.Tags, ","))
-		if diags.HasError() {
-			return diags
+		tags, tagDiags := types.SetValueFrom(ctx, types.StringType, strings.Split(cfg.Tags, ","))
+		if tagDiags.HasError() {
+			return tagDiags
 		}
 		c.Tags = tags
+	} else {
+		// Reset tags when the server-side value is empty so out-of-band
+		// changes (e.g. tags removed in the Nacos console) are detected.
+		c.Tags = types.SetNull(types.StringType)
 	}
 	return diags
 }
@@ -216,7 +220,7 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 		)
 		return
 	}
-	opts := &nacos.CreateCfgOpts{
+	opts := &nacos.PublishCfgOpts{
 		DataID:      data.DataID.ValueString(),
 		Group:       data.Group.ValueString(),
 		Content:     data.Content.ValueString(),
@@ -235,7 +239,7 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 		opts.Tags = tags
 	}
 
-	err = r.client.CreateConfig(ctx, opts)
+	err = r.client.PublishConfig(ctx, opts)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to create configuration",
@@ -327,7 +331,7 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	opts := &nacos.CreateCfgOpts{
+	opts := &nacos.PublishCfgOpts{
 		DataID:      data.DataID.ValueString(),
 		Group:       data.Group.ValueString(),
 		Content:     data.Content.ValueString(),
@@ -345,7 +349,7 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 		}
 		opts.Tags = tags
 	}
-	err := r.client.CreateConfig(ctx, opts)
+	err := r.client.PublishConfig(ctx, opts)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to update configuration",

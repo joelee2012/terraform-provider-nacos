@@ -151,7 +151,7 @@ func (d *ConfigurationDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 
 	data = ConfigurationDataSourceModel{
-		ID:               types.StringValue(BuildThreePartID(cfg.NamespaceID, cfg.Group, cfg.DataID)),
+		ID:               types.StringValue(BuildThreePartID(cfg.GetNamespace(), cfg.GetGroup(), cfg.DataID)),
 		DataID:           types.StringValue(cfg.DataID),
 		Group:            types.StringValue(cfg.GetGroup()),
 		Content:          types.StringValue(cfg.Content),

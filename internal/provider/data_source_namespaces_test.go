@@ -14,7 +14,7 @@ func TestAccNamespacesDataSource(t *testing.T) {
 
 	namespaceId := ""
 	name := "public"
-	if testClient != nil && testClient.APIVersion == "v3" {
+	if isV3Server() {
 		namespaceId = "public"
 	}
 
