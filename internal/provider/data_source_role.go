@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -92,7 +93,7 @@ func (r *RoleDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 
 	role, err := r.client.GetRole(ctx, name, username)
 	if err != nil {
-		if IsNotFoundError(err) {
+		if errors.Is(err, nacos.ErrNotFound) {
 			resp.Diagnostics.AddError(
 				"Role not found",
 				fmt.Sprintf("Role with name=%s, username=%s does not exist.", name, username),

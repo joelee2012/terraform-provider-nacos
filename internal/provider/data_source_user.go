@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -86,7 +87,7 @@ func (r *UserDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 
 	user, err := r.client.GetUser(ctx, username)
 	if err != nil {
-		if IsNotFoundError(err) {
+		if errors.Is(err, nacos.ErrNotFound) {
 			resp.Diagnostics.AddError(
 				"User not found",
 				fmt.Sprintf("User with username=%s does not exist.", username),

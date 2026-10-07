@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -48,10 +49,11 @@ type ConfigurationResourceModel struct {
 }
 
 func (c *ConfigurationResourceModel) SetFromConfiguration(ctx context.Context, cfg *nacos.Configuration) diag.Diagnostics {
-	c.ID = types.StringValue(BuildThreePartID(cfg.GetNamespace(), cfg.GetGroup(), cfg.DataID))
+	ns := userNamespaceID(cfg.GetNamespace(), c.NamespaceID.ValueString())
+	c.ID = types.StringValue(BuildThreePartID(ns, cfg.GetGroup(), cfg.DataID))
 	c.DataID = types.StringValue(cfg.DataID)
 	c.Group = types.StringValue(cfg.GetGroup())
-	c.NamespaceID = types.StringValue(cfg.GetNamespace())
+	c.NamespaceID = types.StringValue(ns)
 	c.Application = types.StringValue(cfg.Application)
 	c.Content = types.StringValue(cfg.Content)
 	c.Description = types.StringValue(cfg.Description)
@@ -125,6 +127,8 @@ func (r *ConfigurationResource) Schema(ctx context.Context, req resource.SchemaR
 			"namespace_id": schema.StringAttribute{
 				MarkdownDescription: "Configuration namespace id, default is empty string which means public namespace.",
 				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString(""),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
@@ -195,7 +199,7 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 	getOpts := &nacos.GetCfgOpts{
 		DataID:      data.DataID.ValueString(),
 		Group:       data.Group.ValueString(),
-		NamespaceID: normalizeNamespaceID(r.client, data.NamespaceID.ValueString()),
+		NamespaceID: data.NamespaceID.ValueString(),
 	}
 	tflog.Debug(ctx, "creating configuration", map[string]any{
 		"namespace_id": getOpts.NamespaceID,
@@ -213,7 +217,7 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 		)
 		return
 	}
-	if err != nil && !IsNotFoundError(err) {
+	if err != nil && !errors.Is(err, nacos.ErrNotFound) {
 		resp.Diagnostics.AddError(
 			"Unable to read configuration",
 			err.Error(),
@@ -224,7 +228,7 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 		DataID:      data.DataID.ValueString(),
 		Group:       data.Group.ValueString(),
 		Content:     data.Content.ValueString(),
-		NamespaceID: getOpts.NamespaceID,
+		NamespaceID: data.NamespaceID.ValueString(),
 		Type:        data.Type.ValueString(),
 		Application: data.Application.ValueString(),
 		Description: data.Description.ValueString(),
@@ -248,9 +252,10 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 	// Read the configuration back so the state reflects the server's view
-	// (e.g. v3 records the public namespace as "public" rather than "").
-	// This keeps Create symmetric with Read/Update and avoids a destroy/
-	// recreate loop on the next refresh when namespace_id differs.
+	// (SetFromConfiguration maps the server's public namespace id to the
+	// user's chosen form). This keeps Create symmetric with Read/Update and
+	// avoids a destroy/recreate loop on the next refresh when namespace_id
+	// differs.
 	created, err := r.client.GetConfig(ctx, &nacos.GetCfgOpts{
 		DataID:      opts.DataID,
 		Group:       opts.Group,
@@ -302,12 +307,12 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 	})
 
 	config, err := r.client.GetConfig(ctx, &nacos.GetCfgOpts{
-		NamespaceID: normalizeNamespaceID(r.client, namespaceId),
+		NamespaceID: namespaceId,
 		Group:       group,
 		DataID:      dataId,
 	})
 	if err != nil {
-		if IsNotFoundError(err) {
+		if errors.Is(err, nacos.ErrNotFound) {
 			resp.State.RemoveResource(ctx)
 			return
 		} else {
@@ -343,12 +348,11 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	namespaceID := normalizeNamespaceID(r.client, data.NamespaceID.ValueString())
 	opts := &nacos.PublishCfgOpts{
 		DataID:      data.DataID.ValueString(),
 		Group:       data.Group.ValueString(),
 		Content:     data.Content.ValueString(),
-		NamespaceID: namespaceID,
+		NamespaceID: data.NamespaceID.ValueString(),
 		Type:        data.Type.ValueString(),
 		Application: data.Application.ValueString(),
 		Description: data.Description.ValueString(),
@@ -373,7 +377,7 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 	config, err := r.client.GetConfig(ctx, &nacos.GetCfgOpts{
 		DataID:      data.DataID.ValueString(),
 		Group:       data.Group.ValueString(),
-		NamespaceID: namespaceID,
+		NamespaceID: data.NamespaceID.ValueString(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -409,7 +413,7 @@ func (r *ConfigurationResource) Delete(ctx context.Context, req resource.DeleteR
 	opts := &nacos.DeleteCfgOpts{
 		DataID:      data.DataID.ValueString(),
 		Group:       data.Group.ValueString(),
-		NamespaceID: normalizeNamespaceID(r.client, data.NamespaceID.ValueString()),
+		NamespaceID: data.NamespaceID.ValueString(),
 	}
 	tflog.Debug(ctx, "deleting configuration", map[string]any{
 		"namespace_id": opts.NamespaceID,

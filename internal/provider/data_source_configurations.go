@@ -157,9 +157,9 @@ func (d *ConfigurationsDataSource) Read(ctx context.Context, req datasource.Read
 	if data.DataID.IsNull() && data.Group.IsNull() && data.NamespaceID.IsNull() {
 		allCs, err = d.client.ListAllConfig(ctx)
 	} else if data.DataID.IsNull() {
-		allCs, err = d.client.ListConfigInNs(ctx, normalizeNamespaceID(d.client, data.NamespaceID.ValueString()), data.Group.ValueString())
+		allCs, err = d.client.ListConfigInNs(ctx, data.NamespaceID.ValueString(), data.Group.ValueString())
 	} else {
-		allCs, err = d.client.ListConfig(ctx, &nacos.ListCfgOpts{DataID: data.DataID.ValueString(), Group: data.Group.ValueString(), NamespaceID: normalizeNamespaceID(d.client, data.NamespaceID.ValueString())})
+		allCs, err = d.client.ListConfig(ctx, &nacos.ListCfgOpts{DataID: data.DataID.ValueString(), Group: data.Group.ValueString(), NamespaceID: data.NamespaceID.ValueString()})
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -169,12 +169,13 @@ func (d *ConfigurationsDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 	for _, cfg := range allCs.Items {
+		ns := userNamespaceID(cfg.GetNamespace(), data.NamespaceID.ValueString())
 		data.Items = append(data.Items, &ConfigurationModel{
-			ID:               types.StringValue(BuildThreePartID(cfg.GetNamespace(), cfg.GetGroup(), cfg.DataID)),
+			ID:               types.StringValue(BuildThreePartID(ns, cfg.GetGroup(), cfg.DataID)),
 			DataID:           types.StringValue(cfg.DataID),
 			Group:            types.StringValue(cfg.GetGroup()),
 			Content:          types.StringValue(cfg.Content),
-			NamespaceID:      types.StringValue(cfg.GetNamespace()),
+			NamespaceID:      types.StringValue(ns),
 			Type:             types.StringValue(cfg.Type),
 			Md5:              types.StringValue(cfg.Md5),
 			EncryptedDataKey: types.StringValue(cfg.EncryptedDataKey),

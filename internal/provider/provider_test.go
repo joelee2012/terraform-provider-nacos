@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
@@ -35,19 +34,17 @@ func initTestClient(t *testing.T) {
 }
 
 // isV3Server reports whether the test Nacos server exposes the v3 console API
-// (Nacos 3.x). It replaces the former testClient.APIVersion field access,
-// which became unexported in go-nacos v0.4.0. The test client always
-// auto-detects the version, so GetVersion returns the actual server version
-// (e.g. "3.1.0").
+// (Nacos 3.x). The test client always auto-detects the version, so
+// GetAPIVersion returns the active API version ("v1" or "v3").
 func isV3Server() bool {
 	if testClient == nil {
 		return false
 	}
-	ver, err := testClient.GetVersion(context.Background())
+	ver, err := testClient.GetAPIVersion()
 	if err != nil {
 		return false
 	}
-	return strings.HasPrefix(ver, "3")
+	return ver == "v3"
 }
 
 func testAccPreCheck(t *testing.T) {

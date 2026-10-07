@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -127,7 +128,7 @@ func (r *RoleResource) Create(ctx context.Context, req resource.CreateRequest, r
 		)
 		return
 	}
-	if err != nil && !IsNotFoundError(err) {
+	if err != nil && !errors.Is(err, nacos.ErrNotFound) {
 		resp.Diagnostics.AddError(
 			"Unable to read role",
 			err.Error(),
@@ -171,7 +172,7 @@ func (r *RoleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	}
 	role, err := r.client.GetRole(ctx, name, username)
 	if err != nil {
-		if IsNotFoundError(err) {
+		if errors.Is(err, nacos.ErrNotFound) {
 			resp.State.RemoveResource(ctx)
 		} else {
 			resp.Diagnostics.AddError(

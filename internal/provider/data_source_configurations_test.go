@@ -22,12 +22,13 @@ server:
 `
 	namespaceId := ""
 	setupTestConfiguration(t, &nacos.PublishCfgOpts{NamespaceID: namespaceId, DataID: dataId, Group: group, Content: content})
-	// The provider normalizes an empty namespace_id to the server's public
-	// namespace id, so the expected state value depends on the server version.
+	// The provider surfaces the public namespace as "" regardless of the
+	// server's internal id ("public" on v3), matching the config.
 	expectedNamespaceID := ""
+	expectedContent := content
 	if isV3Server() {
-		expectedNamespaceID = "public"
-		content = ""
+		// v3's list endpoint does not return config content.
+		expectedContent = ""
 	}
 
 	config := fmt.Sprintf(`
@@ -54,7 +55,7 @@ data "nacos_configurations" "test" {
 					statecheck.ExpectKnownValue(
 						resourceName,
 						tfjsonpath.New("items").AtSliceIndex(0).AtMapKey("content"),
-						knownvalue.StringExact(content),
+						knownvalue.StringExact(expectedContent),
 					),
 				},
 			},

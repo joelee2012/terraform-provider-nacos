@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 
@@ -144,7 +145,7 @@ func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequ
 		)
 		return
 	}
-	if err != nil && !IsNotFoundError(err) {
+	if err != nil && !errors.Is(err, nacos.ErrNotFound) {
 		resp.Diagnostics.AddError(
 			"Unable to read permission",
 			err.Error(),
@@ -188,7 +189,7 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 	_, err = r.client.GetPermission(ctx, rolename, resource, action)
 	if err != nil {
-		if IsNotFoundError(err) {
+		if errors.Is(err, nacos.ErrNotFound) {
 			resp.State.RemoveResource(ctx)
 		} else {
 			resp.Diagnostics.AddError(

@@ -13,13 +13,9 @@ import (
 func TestAccNamespaceDataSource(t *testing.T) {
 	resourceName := "data.nacos_namespace.public"
 	name := "public"
-	// The provider normalizes an empty namespace_id to the server's public
-	// namespace id ("" on v1/v2, "public" on v3), so the config always
-	// omits it and the expected state value depends on the server version.
+	// The provider surfaces the public namespace as "" regardless of the
+	// server's internal id ("public" on v3), matching the config.
 	expectedNamespaceID := ""
-	if isV3Server() {
-		expectedNamespaceID = "public"
-	}
 	config := fmt.Sprintf(`
 data "nacos_namespace" "public" {
 	namespace_id = "%s"
