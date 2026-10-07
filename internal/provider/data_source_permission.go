@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -76,7 +77,7 @@ func (r *PermissionDataSource) Configure(ctx context.Context, req datasource.Con
 
 	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
+			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *nacos.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 
@@ -108,7 +109,7 @@ func (r *PermissionDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	perm, err := r.client.GetPermission(ctx, roleName, resource, action)
 	if err != nil {
-		if IsNotFoundError(err) {
+		if errors.Is(err, nacos.ErrNotFound) {
 			resp.Diagnostics.AddError(
 				"Permission not found",
 				fmt.Sprintf("Permission with role_name=%s, resource=%s, action=%s does not exist.", roleName, resource, action),

@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -48,21 +49,26 @@ type ConfigurationResourceModel struct {
 }
 
 func (c *ConfigurationResourceModel) SetFromConfiguration(ctx context.Context, cfg *nacos.Configuration) diag.Diagnostics {
-	c.ID = types.StringValue(BuildThreePartID(cfg.GetNamespace(), cfg.GetGroup(), cfg.DataID))
+	ns := userNamespaceID(cfg.GetNamespace(), c.NamespaceID.ValueString())
+	c.ID = types.StringValue(BuildThreePartID(ns, cfg.GetGroup(), cfg.DataID))
 	c.DataID = types.StringValue(cfg.DataID)
 	c.Group = types.StringValue(cfg.GetGroup())
-	c.NamespaceID = types.StringValue(cfg.GetNamespace())
+	c.NamespaceID = types.StringValue(ns)
 	c.Application = types.StringValue(cfg.Application)
 	c.Content = types.StringValue(cfg.Content)
 	c.Description = types.StringValue(cfg.Description)
 	c.Type = types.StringValue(cfg.Type)
 	var diags diag.Diagnostics
 	if cfg.Tags != "" {
-		tags, diags := types.SetValueFrom(ctx, types.StringType, strings.Split(cfg.Tags, ","))
-		if diags.HasError() {
-			return diags
+		tags, tagDiags := types.SetValueFrom(ctx, types.StringType, strings.Split(cfg.Tags, ","))
+		if tagDiags.HasError() {
+			return tagDiags
 		}
 		c.Tags = tags
+	} else {
+		// Reset tags when the server-side value is empty so out-of-band
+		// changes (e.g. tags removed in the Nacos console) are detected.
+		c.Tags = types.SetNull(types.StringType)
 	}
 	return diags
 }
@@ -121,6 +127,8 @@ func (r *ConfigurationResource) Schema(ctx context.Context, req resource.SchemaR
 			"namespace_id": schema.StringAttribute{
 				MarkdownDescription: "Configuration namespace id, default is empty string which means public namespace.",
 				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString(""),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
@@ -209,14 +217,14 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 		)
 		return
 	}
-	if err != nil && !IsNotFoundError(err) {
+	if err != nil && !errors.Is(err, nacos.ErrNotFound) {
 		resp.Diagnostics.AddError(
 			"Unable to read configuration",
 			err.Error(),
 		)
 		return
 	}
-	opts := &nacos.CreateCfgOpts{
+	opts := &nacos.PublishCfgOpts{
 		DataID:      data.DataID.ValueString(),
 		Group:       data.Group.ValueString(),
 		Content:     data.Content.ValueString(),
@@ -235,7 +243,7 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 		opts.Tags = tags
 	}
 
-	err = r.client.CreateConfig(ctx, opts)
+	err = r.client.PublishConfig(ctx, opts)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to create configuration",
@@ -243,14 +251,27 @@ func (r *ConfigurationResource) Create(ctx context.Context, req resource.CreateR
 		)
 		return
 	}
-	data.ID = types.StringValue(id)
-	data.DataID = types.StringValue(opts.DataID)
-	data.Group = types.StringValue(opts.Group)
-	data.NamespaceID = types.StringValue(opts.NamespaceID)
-	data.Content = types.StringValue(opts.Content)
-	data.Type = types.StringValue(opts.Type)
-	data.Application = types.StringValue(opts.Application)
-	data.Description = types.StringValue(opts.Description)
+	// Read the configuration back so the state reflects the server's view
+	// (SetFromConfiguration maps the server's public namespace id to the
+	// user's chosen form). This keeps Create symmetric with Read/Update and
+	// avoids a destroy/recreate loop on the next refresh when namespace_id
+	// differs.
+	created, err := r.client.GetConfig(ctx, &nacos.GetCfgOpts{
+		DataID:      opts.DataID,
+		Group:       opts.Group,
+		NamespaceID: opts.NamespaceID,
+	})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to read configuration after creating resource",
+			err.Error(),
+		)
+		return
+	}
+	resp.Diagnostics.Append(data.SetFromConfiguration(ctx, created)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	tflog.Debug(ctx, "created configuration", map[string]any{
 		"namespace_id": getOpts.NamespaceID,
@@ -291,7 +312,7 @@ func (r *ConfigurationResource) Read(ctx context.Context, req resource.ReadReque
 		DataID:      dataId,
 	})
 	if err != nil {
-		if IsNotFoundError(err) {
+		if errors.Is(err, nacos.ErrNotFound) {
 			resp.State.RemoveResource(ctx)
 			return
 		} else {
@@ -327,7 +348,7 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	opts := &nacos.CreateCfgOpts{
+	opts := &nacos.PublishCfgOpts{
 		DataID:      data.DataID.ValueString(),
 		Group:       data.Group.ValueString(),
 		Content:     data.Content.ValueString(),
@@ -345,7 +366,7 @@ func (r *ConfigurationResource) Update(ctx context.Context, req resource.UpdateR
 		}
 		opts.Tags = tags
 	}
-	err := r.client.CreateConfig(ctx, opts)
+	err := r.client.PublishConfig(ctx, opts)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to update configuration",

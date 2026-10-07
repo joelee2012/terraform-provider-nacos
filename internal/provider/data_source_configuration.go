@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -136,7 +137,7 @@ func (d *ConfigurationDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 	cfg, err := d.client.GetConfig(ctx, &nacos.GetCfgOpts{DataID: data.DataID.ValueString(), Group: data.Group.ValueString(), NamespaceID: data.NamespaceID.ValueString()})
 	if err != nil {
-		if IsNotFoundError(err) {
+		if errors.Is(err, nacos.ErrNotFound) {
 			resp.Diagnostics.AddError(
 				"Configuration not found",
 				fmt.Sprintf("Configuration with namespace_id=%s, group=%s, data_id=%s does not exist.", data.NamespaceID.ValueString(), data.Group.ValueString(), data.DataID.ValueString()),
@@ -150,12 +151,13 @@ func (d *ConfigurationDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
+	ns := userNamespaceID(cfg.GetNamespace(), data.NamespaceID.ValueString())
 	data = ConfigurationDataSourceModel{
-		ID:               types.StringValue(BuildThreePartID(cfg.NamespaceID, cfg.Group, cfg.DataID)),
+		ID:               types.StringValue(BuildThreePartID(ns, cfg.GetGroup(), cfg.DataID)),
 		DataID:           types.StringValue(cfg.DataID),
 		Group:            types.StringValue(cfg.GetGroup()),
 		Content:          types.StringValue(cfg.Content),
-		NamespaceID:      types.StringValue(cfg.GetNamespace()),
+		NamespaceID:      types.StringValue(ns),
 		Type:             types.StringValue(cfg.Type),
 		Md5:              types.StringValue(cfg.Md5),
 		EncryptedDataKey: types.StringValue(cfg.EncryptedDataKey),

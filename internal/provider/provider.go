@@ -2,7 +2,9 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"unicode"
 
 	stringvalidator "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -66,6 +68,74 @@ func (p *NacosProvider) Schema(ctx context.Context, req provider.SchemaRequest, 
 	}
 }
 
+// resolveStringAttr resolves a provider string attribute to its effective
+// value: the configured value when set, otherwise the named environment
+// variable. When the value is still unknown at plan time it records an
+// attribute error and returns "" so the caller can stop after collecting
+// errors. The lowercase name (e.g. "host") drives both the error summary
+// ("Nacos API Host") and the message body.
+func resolveStringAttr(resp *provider.ConfigureResponse, attr path.Path, name, envVar string, v types.String) string {
+	if v.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			attr,
+			"Unknown Nacos API "+titleCase(name),
+			fmt.Sprintf("The provider cannot create the Nacos API client as there is an unknown configuration value for the Nacos API %s. "+
+				"Either target apply the source of the value first, set the value statically in the configuration, or use the %s environment variable.",
+				name, envVar),
+		)
+		return ""
+	}
+	if !v.IsNull() {
+		return v.ValueString()
+	}
+	return os.Getenv(envVar)
+}
+
+// requireStringAttr resolves a required provider string attribute to its
+// effective value and reports an error when it cannot be used. An unknown
+// value (not yet known at plan time) is reported with guidance to apply its
+// source; a resolved empty value is reported as missing. The unknown check
+// short-circuits before the empty check, since ValueString of an unknown
+// value is "" and would otherwise be misreported as missing. The lowercase
+// name (e.g. "host") drives the error summary ("Nacos API Host") and body.
+func requireStringAttr(resp *provider.ConfigureResponse, attr path.Path, name, envVar string, v types.String) string {
+	if v.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			attr,
+			"Unknown Nacos API "+titleCase(name),
+			fmt.Sprintf("The provider cannot create the Nacos API client as there is an unknown configuration value for the Nacos API %s. "+
+				"Either target apply the source of the value first, set the value statically in the configuration, or use the %s environment variable.",
+				name, envVar),
+		)
+		return ""
+	}
+	value := os.Getenv(envVar)
+	if !v.IsNull() {
+		value = v.ValueString()
+	}
+	if value == "" {
+		resp.Diagnostics.AddAttributeError(
+			attr,
+			"Missing Nacos API "+titleCase(name),
+			fmt.Sprintf("The provider cannot create the Nacos API client as there is a missing or empty value for the Nacos API %s. "+
+				"Set the %s value in the configuration or use the %s environment variable. "+
+				"If either is already set, ensure the value is not empty.",
+				name, name, envVar),
+		)
+	}
+	return value
+}
+
+// titleCase capitalizes the first rune of s (used for diagnostic summaries).
+func titleCase(s string) string {
+	if s == "" {
+		return s
+	}
+	r := []rune(s)
+	r[0] = unicode.ToUpper(r[0])
+	return string(r)
+}
+
 func (p *NacosProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	var config NacosProviderModel
 
@@ -74,113 +144,29 @@ func (p *NacosProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if config.Host.IsUnknown() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("host"),
-			"Unknown Nacos API Host",
-			"The provider cannot create the Nacos API client as there is an unknown configuration value for the Nacos API host. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the NACOS_HOST environment variable.",
-		)
-	}
 
-	if config.Username.IsUnknown() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("username"),
-			"Unknown Nacos API Username",
-			"The provider cannot create the Nacos API client as there is an unknown configuration value for the Nacos API username. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the NACOS_USERNAME environment variable.",
-		)
-	}
-
-	if config.Password.IsUnknown() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("password"),
-			"Unknown Nacos API Password",
-			"The provider cannot create the Nacos API client as there is an unknown configuration value for the Nacos API password. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the NACOS_PASSWORD environment variable.",
-		)
-	}
+	// Resolve each string attribute from the configuration, falling back to
+	// its environment variable. Required attributes (host/username/password)
+	// are validated for unknown/empty in the same call; api_version is
+	// optional and auto-detected when absent, so it is resolved without an
+	// empty check.
+	host := requireStringAttr(resp, path.Root("host"), "host", "NACOS_HOST", config.Host)
+	username := requireStringAttr(resp, path.Root("username"), "username", "NACOS_USERNAME", config.Username)
+	password := requireStringAttr(resp, path.Root("password"), "password", "NACOS_PASSWORD", config.Password)
+	apiVersion := resolveStringAttr(resp, path.Root("api_version"), "version", "NACOS_API_VERSION", config.APIVersion)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if config.APIVersion.IsUnknown() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("api_version"),
-			"Unknown Nacos API Version",
-			"The provider cannot create the Nacos API client as there is an unknown configuration value for the Nacos API version. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the NACOS_API_VERSION environment variable.",
-		)
+	// Create a new Nacos client using the configuration values. When an API
+	// version is configured, pin it via WithAPIVersion to skip the server
+	// state probe; otherwise the client auto-detects the version during Init.
+	var opts []nacos.Option
+	if apiVersion != "" {
+		opts = append(opts, nacos.WithAPIVersion(apiVersion))
 	}
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Default values to environment variables, but override
-	// with Terraform configuration value if set.
-
-	host := os.Getenv("NACOS_HOST")
-	username := os.Getenv("NACOS_USERNAME")
-	password := os.Getenv("NACOS_PASSWORD")
-	apiVersion := os.Getenv("NACOS_API_VERSION")
-
-	if !config.Host.IsNull() {
-		host = config.Host.ValueString()
-	}
-
-	if !config.Username.IsNull() {
-		username = config.Username.ValueString()
-	}
-
-	if !config.Password.IsNull() {
-		password = config.Password.ValueString()
-	}
-
-	if !config.APIVersion.IsNull() {
-		apiVersion = config.APIVersion.ValueString()
-	}
-
-	// If any of the expected configurations are missing, return
-	// errors with provider-specific guidance.
-
-	if host == "" {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("host"),
-			"Missing Nacos API Host",
-			"The provider cannot create the Nacos API client as there is a missing or empty value for the Nacos API host. "+
-				"Set the host value in the configuration or use the NACOS_HOST environment variable. "+
-				"If either is already set, ensure the value is not empty.",
-		)
-	}
-
-	if username == "" {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("username"),
-			"Missing Nacos API Username",
-			"The provider cannot create the Nacos API client as there is a missing or empty value for the Nacos API username. "+
-				"Set the username value in the configuration or use the NACOS_USERNAME environment variable. "+
-				"If either is already set, ensure the value is not empty.",
-		)
-	}
-
-	if password == "" {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("password"),
-			"Missing Nacos API Password",
-			"The provider cannot create the Nacos API client as there is a missing or empty value for the Nacos API password. "+
-				"Set the password value in the configuration or use the NACOS_PASSWORD environment variable. "+
-				"If either is already set, ensure the value is not empty.",
-		)
-	}
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Create a new Nacos client using the configuration values
-	client, err := nacos.NewClient(host, username, password)
+	client, err := nacos.NewClient(host, username, password, opts...)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to create Nacos API client",
@@ -188,11 +174,9 @@ func (p *NacosProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		)
 		return
 	}
-	if apiVersion != "" {
-		client.APIVersion = apiVersion
-	}
-	// Detect or validate API version early to avoid URL path issues during redirects
-	if _, err := client.GetVersion(ctx); err != nil {
+	// Detect (or validate the pinned) API version early so that resource and
+	// data-source operations build the correct URL paths from the start.
+	if err := client.Init(ctx); err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to detect Nacos API version",
 			err.Error(),

@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -103,9 +104,9 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	ns, err := d.client.GetNamespace(ctx, data.NamespaceId.ValueString())
+	ns, err := d.client.GetNamespace(ctx, serverNamespaceID(d.client, data.NamespaceId.ValueString()))
 	if err != nil {
-		if IsNotFoundError(err) {
+		if errors.Is(err, nacos.ErrNotFound) {
 			resp.Diagnostics.AddError(
 				"Namespace not found",
 				fmt.Sprintf("Namespace with namespace_id=%s does not exist.", data.NamespaceId.ValueString()),
@@ -119,9 +120,10 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
+	nsID := userNamespaceID(ns.ID, data.NamespaceId.ValueString())
 	data = NamespaceDataSourceModel{
-		ID:          types.StringValue(ns.ID),
-		NamespaceId: types.StringValue(ns.ID),
+		ID:          types.StringValue(nsID),
+		NamespaceId: types.StringValue(nsID),
 		Name:        types.StringValue(ns.Name),
 		Description: types.StringValue(ns.Description),
 		Quota:       types.Int64Value(int64(ns.Quota)),
