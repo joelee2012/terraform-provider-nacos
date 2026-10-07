@@ -134,7 +134,7 @@ func (d *ConfigurationDataSource) Read(ctx context.Context, req datasource.ReadR
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	cfg, err := d.client.GetConfig(ctx, &nacos.GetCfgOpts{DataID: data.DataID.ValueString(), Group: data.Group.ValueString(), NamespaceID: data.NamespaceID.ValueString()})
+	cfg, err := d.client.GetConfig(ctx, &nacos.GetCfgOpts{DataID: data.DataID.ValueString(), Group: data.Group.ValueString(), NamespaceID: normalizeNamespaceID(d.client, data.NamespaceID.ValueString())})
 	if err != nil {
 		if IsNotFoundError(err) {
 			resp.Diagnostics.AddError(

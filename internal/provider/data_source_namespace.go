@@ -103,7 +103,7 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	ns, err := d.client.GetNamespace(ctx, data.NamespaceId.ValueString())
+	ns, err := d.client.GetNamespace(ctx, normalizeNamespaceID(d.client, data.NamespaceId.ValueString()))
 	if err != nil {
 		if IsNotFoundError(err) {
 			resp.Diagnostics.AddError(

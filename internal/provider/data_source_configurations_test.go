@@ -22,8 +22,11 @@ server:
 `
 	namespaceId := ""
 	setupTestConfiguration(t, &nacos.PublishCfgOpts{NamespaceID: namespaceId, DataID: dataId, Group: group, Content: content})
+	// The provider normalizes an empty namespace_id to the server's public
+	// namespace id, so the expected state value depends on the server version.
+	expectedNamespaceID := ""
 	if isV3Server() {
-		namespaceId = "public"
+		expectedNamespaceID = "public"
 		content = ""
 	}
 
@@ -46,7 +49,7 @@ data "nacos_configurations" "test" {
 					statecheck.ExpectKnownValue(
 						resourceName,
 						tfjsonpath.New("items").AtSliceIndex(0).AtMapKey("namespace_id"),
-						knownvalue.StringExact(namespaceId),
+						knownvalue.StringExact(expectedNamespaceID),
 					),
 					statecheck.ExpectKnownValue(
 						resourceName,

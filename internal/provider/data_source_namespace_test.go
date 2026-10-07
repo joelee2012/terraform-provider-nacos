@@ -12,15 +12,18 @@ import (
 
 func TestAccNamespaceDataSource(t *testing.T) {
 	resourceName := "data.nacos_namespace.public"
-	namespaceId := ""
 	name := "public"
+	// The provider normalizes an empty namespace_id to the server's public
+	// namespace id ("" on v1/v2, "public" on v3), so the config always
+	// omits it and the expected state value depends on the server version.
+	expectedNamespaceID := ""
 	if isV3Server() {
-		namespaceId = "public"
+		expectedNamespaceID = "public"
 	}
 	config := fmt.Sprintf(`
 data "nacos_namespace" "public" {
 	namespace_id = "%s"
-}`, namespaceId)
+}`, "")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -33,7 +36,7 @@ data "nacos_namespace" "public" {
 					statecheck.ExpectKnownValue(
 						resourceName,
 						tfjsonpath.New("namespace_id"),
-						knownvalue.StringExact(namespaceId),
+						knownvalue.StringExact(expectedNamespaceID),
 					),
 					statecheck.ExpectKnownValue(
 						resourceName,
