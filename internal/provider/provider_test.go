@@ -27,10 +27,24 @@ func initTestClient(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create Nacos client: %s", err.Error())
 	}
-	if _, err := client.GetVersion(context.Background()); err != nil {
+	if err := client.Init(context.Background()); err != nil {
 		t.Fatalf("Failed to detect Nacos API version: %s", err.Error())
 	}
 	testClient = client
+}
+
+// isV3Server reports whether the test Nacos server exposes the v3 console API
+// (Nacos 3.x). The test client always auto-detects the version, so
+// GetAPIVersion returns the active API version ("v1" or "v3").
+func isV3Server() bool {
+	if testClient == nil {
+		return false
+	}
+	ver, err := testClient.GetAPIVersion()
+	if err != nil {
+		return false
+	}
+	return ver == "v3"
 }
 
 func testAccPreCheck(t *testing.T) {
@@ -46,13 +60,13 @@ func testAccPreCheck(t *testing.T) {
 	initTestClient(t)
 }
 
-func setupTestConfiguration(t *testing.T, opts *nacos.CreateCfgOpts) {
+func setupTestConfiguration(t *testing.T, opts *nacos.PublishCfgOpts) {
 	if os.Getenv("TF_ACC") == "" {
 		return
 	}
 	initTestClient(t)
 	ctx := context.Background()
-	if err := testClient.CreateConfig(ctx, opts); err != nil {
+	if err := testClient.PublishConfig(ctx, opts); err != nil {
 		t.Errorf("Error creating %s:%s:%s: %s", opts.NamespaceID, opts.Group, opts.DataID, err.Error())
 	}
 	t.Cleanup(func() {

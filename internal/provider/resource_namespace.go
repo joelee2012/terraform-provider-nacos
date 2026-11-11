@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -117,8 +118,8 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 	}
 	tflog.Debug(ctx, "creating namespace", map[string]any{"id": data.NamespaceID.ValueString()})
 
-	config, err := r.client.GetNamespace(ctx, opts.ID)
-	if err == nil && config != nil {
+	ns, err := r.client.GetNamespace(ctx, opts.ID)
+	if err == nil && ns != nil {
 		resp.Diagnostics.AddError(
 			"Namespace already exists",
 			fmt.Sprintf("A namespace with namespace_id=%s already exists. "+
@@ -126,7 +127,7 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 		)
 		return
 	}
-	if err != nil && !IsNotFoundError(err) {
+	if err != nil && !errors.Is(err, nacos.ErrNotFound) {
 		resp.Diagnostics.AddError(
 			"Unable to read namespace",
 			err.Error(),
@@ -162,7 +163,7 @@ func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	ns, err := r.client.GetNamespace(ctx, data.ID.ValueString())
 	if err != nil {
-		if IsNotFoundError(err) {
+		if errors.Is(err, nacos.ErrNotFound) {
 			resp.State.RemoveResource(ctx)
 		} else {
 			resp.Diagnostics.AddError(

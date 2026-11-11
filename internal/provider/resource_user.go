@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -113,7 +114,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		)
 		return
 	}
-	if err != nil && !IsNotFoundError(err) {
+	if err != nil && !errors.Is(err, nacos.ErrNotFound) {
 		resp.Diagnostics.AddError(
 			"Unable to read user",
 			err.Error(),
@@ -154,7 +155,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	id := data.ID.ValueString()
 	user, err := r.client.GetUser(ctx, id)
 	if err != nil {
-		if IsNotFoundError(err) {
+		if errors.Is(err, nacos.ErrNotFound) {
 			resp.State.RemoveResource(ctx)
 		} else {
 			resp.Diagnostics.AddError(

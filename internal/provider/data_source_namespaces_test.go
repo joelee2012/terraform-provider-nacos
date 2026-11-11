@@ -12,11 +12,10 @@ import (
 func TestAccNamespacesDataSource(t *testing.T) {
 	resourceName := "data.nacos_namespaces.all"
 
+	// The provider surfaces the public namespace as "" regardless of the
+	// server's internal id ("public" on v3), matching the config contract.
 	namespaceId := ""
 	name := "public"
-	if testClient != nil && testClient.APIVersion == "v3" {
-		namespaceId = "public"
-	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

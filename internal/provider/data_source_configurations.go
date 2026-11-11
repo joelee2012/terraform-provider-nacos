@@ -169,12 +169,13 @@ func (d *ConfigurationsDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 	for _, cfg := range allCs.Items {
+		ns := userNamespaceID(cfg.GetNamespace(), data.NamespaceID.ValueString())
 		data.Items = append(data.Items, &ConfigurationModel{
-			ID:               types.StringValue(BuildThreePartID(cfg.NamespaceID, cfg.Group, cfg.DataID)),
+			ID:               types.StringValue(BuildThreePartID(ns, cfg.GetGroup(), cfg.DataID)),
 			DataID:           types.StringValue(cfg.DataID),
 			Group:            types.StringValue(cfg.GetGroup()),
 			Content:          types.StringValue(cfg.Content),
-			NamespaceID:      types.StringValue(cfg.GetNamespace()),
+			NamespaceID:      types.StringValue(ns),
 			Type:             types.StringValue(cfg.Type),
 			Md5:              types.StringValue(cfg.Md5),
 			EncryptedDataKey: types.StringValue(cfg.EncryptedDataKey),

@@ -125,9 +125,10 @@ func (d *NamespacesDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	}
 
 	for _, ns := range namespaces.Items {
+		nsID := userNamespaceID(ns.ID, "")
 		namespace := NamespaceModel{
-			ID:          types.StringValue(ns.ID),
-			NamespaceId: types.StringValue(ns.ID),
+			ID:          types.StringValue(nsID),
+			NamespaceId: types.StringValue(nsID),
 			Name:        types.StringValue(ns.Name),
 			Description: types.StringValue(ns.Description),
 			Quota:       types.Int64Value(int64(ns.Quota)),

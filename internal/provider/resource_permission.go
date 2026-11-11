@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 
@@ -105,9 +106,14 @@ func (r *PermissionResource) Configure(ctx context.Context, req resource.Configu
 	r.client = client
 }
 
-func ParesePermissionID(id string) (string, string, string, error) {
-	re := regexp.MustCompile(`^([^:]+):([^:]*:[^:]+:[^:]+):(r|w|rw)$`)
-	matches := re.FindStringSubmatch(id)
+var permissionIDRe = regexp.MustCompile(`^([^:]+):([^:]*:[^:]+:[^:]+):(r|w|rw)$`)
+
+// ParsePermissionID splits a permission resource id into role name, resource,
+// and action. The resource segment itself contains colons (it is a config
+// triple <namespace_id>:<group>:<data_id>), so the id is matched against a
+// strict pattern rather than a simple colon split.
+func ParsePermissionID(id string) (string, string, string, error) {
+	matches := permissionIDRe.FindStringSubmatch(id)
 	if matches == nil {
 		return "", "", "", fmt.Errorf("unexpected ID format (%q). expected <role_name>:<resource>:<action>", id)
 	}
@@ -139,7 +145,7 @@ func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequ
 		)
 		return
 	}
-	if err != nil && !IsNotFoundError(err) {
+	if err != nil && !errors.Is(err, nacos.ErrNotFound) {
 		resp.Diagnostics.AddError(
 			"Unable to read permission",
 			err.Error(),
@@ -173,7 +179,7 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 	id := data.ID.ValueString()
-	rolename, resource, action, err := ParesePermissionID(id)
+	rolename, resource, action, err := ParsePermissionID(id)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to parse permission id",
@@ -183,7 +189,7 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 	_, err = r.client.GetPermission(ctx, rolename, resource, action)
 	if err != nil {
-		if IsNotFoundError(err) {
+		if errors.Is(err, nacos.ErrNotFound) {
 			resp.State.RemoveResource(ctx)
 		} else {
 			resp.Diagnostics.AddError(
